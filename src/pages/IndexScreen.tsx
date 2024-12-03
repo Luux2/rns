@@ -1,23 +1,26 @@
 import Header from "../components/Header.tsx";
 import { useState, useRef, useEffect } from "react";
 import {PlusIcon, UserIcon, ViewColumnsIcon, XMarkIcon} from "@heroicons/react/24/outline";
+import {useNavigate} from "react-router-dom";
+import {usePlayerContext} from "../context/PlayerContext.tsx";
 
 export const IndexScreen = () => {
-    const [players, setPlayers] = useState<string[]>([]);
+    const navigate = useNavigate();
+    const {players, setPlayers} = usePlayerContext();
     const [playerName, setPlayerName] = useState<string>("");
     const [counter, setCounter] = useState<number>(0);
     const [courts, setCourts] = useState<number>(0);
 
-    const listRef = useRef<HTMLDivElement>(null); // Ref til spillerlisten
+    const listRef = useRef<HTMLDivElement>(null);
 
-    const addPlayer = () => {
-        if (playerName.trim()) {
-            const newPlayerCount = players.length + 1;
-            setPlayers([...players, playerName]);
-            setCounter(counter + 1);
-            setCourts(Math.ceil(newPlayerCount / 4));
-            setPlayerName("");
+    const addPlayer = (playerName: string) => {
+        if (playerName === "") {
+            return;
         }
+        setPlayers([...players, playerName]);
+        setCounter(counter + 1);
+        setCourts(Math.ceil((counter + 1) / 4));
+        setPlayerName("");
     };
 
     const removePlayer = (index: number) => {
@@ -34,11 +37,25 @@ export const IndexScreen = () => {
         setPlayerName("");
     }
 
+    const shufflePlayers = () => {
+        const shuffledPlayers = players.sort(() => Math.random() - 0.5);
+        setPlayers(shuffledPlayers);
+    }
+
+    const startTournament = () => {
+        shufflePlayers();
+        navigate("/turnering");
+    }
+
     useEffect(() => {
         if (listRef.current) {
             listRef.current.scrollTop = listRef.current.scrollHeight;
         }
     }, [players]);
+
+    useEffect(() => {
+        resetGame();
+    }, []);
 
     return (
         <>
@@ -53,34 +70,47 @@ export const IndexScreen = () => {
 
                 <div className="flex justify-end space-x-4">
                     <a
-                        className="h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
-                        border-red-500 bg-red-500 px-2 py-3 transition-colors hover:bg-transparent focus:outline-none focus:ring"
+                        className={`"h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
+                        px-2 py-3 transition-colors ${players.length < 1 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"}`}
                         onClick={() => resetGame()}
+                        aria-disabled={players.length < 1}
                     >
                         <span
-                            className="font-medium transition-colors group-hover:text-red-500 group-active:text-red-500"
+                            className={`font-medium ${
+                                players.length < 4 ? "text-gray-600" : "group-hover:text-red-500 group-active:text-red-500"
+                            }`}
                         >
                             Nulstil
                         </span>
                         <span
-                            className="shrink-0 rounded-full border border-current bg-white p-2 text-red-500 group-active:text-red-500">
+                            className={`shrink-0 rounded-full border p-2 ${players.length < 1 ? "border-gray-600 text-gray-600" : "border-current bg-white text-red-500 group-active:text-red-500"}`}>
                             🗑
                         </span>
                     </a>
                     <a
-                        className="h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border border-sky-500 bg-sky-500 px-2 py-3 transition-colors hover:bg-transparent focus:outline-none focus:ring"
-                        href="#"
+                        className={`h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
+                            players.length < 4 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
+                        }`}
+                        onClick={players.length >= 4 ? () => startTournament() : undefined}
+                        aria-disabled={players.length < 4}
                     >
+    <span
+        className={`font-medium ${
+            players.length < 4 ? "text-gray-600" : "group-hover:text-sky-500 group-active:text-sky-500"
+        }`}
+    >
+        Start turnering
+    </span>
                         <span
-                            className="font-medium transition-colors group-hover:text-sky-500 group-active:text-sky-500"
+                            className={`shrink-0 rounded-full border p-2 ${
+                                players.length < 4 ? "border-gray-600 text-gray-600" : "border-current bg-white text-sky-500 group-active:text-sky-500"
+                            }`}
                         >
-                            Start turnering
-                        </span>
-                        <span
-                            className="shrink-0 rounded-full border border-current bg-white p-2 text-sky-500 group-active:text-sky-500">
-                            🎾
-                        </span>
+        🎾
+    </span>
                     </a>
+
+
                 </div>
             </div>
 
@@ -89,7 +119,7 @@ export const IndexScreen = () => {
                 className="flex-col p-4 overflow-y-auto pb-4"
                 style={{maxHeight: "calc(100vh - 370px)"}}
             >
-                {players.map((player, index) => (
+                {players.map((player: any, index: any) => (
                     <div className="flex justify-between border-b mb-2 p-2 text-xl" key={index}>
                         {player}
                         <XMarkIcon className="text-red-500 h-8 w-8 cursor-pointer" onClick={() => removePlayer(index)}/>
@@ -97,7 +127,7 @@ export const IndexScreen = () => {
                 ))}
             </div>
 
-            {/* Inputfeltet fast i bunden */}
+
             <div className="fixed bottom-0 left-0 w-full p-4 bg-gray-900">
                 <label
                     htmlFor="playername"
@@ -119,7 +149,7 @@ export const IndexScreen = () => {
                     <div>
                         <PlusIcon
                             className="h-8 w-8 cursor-pointer"
-                            onClick={addPlayer}
+                            onClick={() => addPlayer(playerName)}
                         />
                     </div>
                 </label>
