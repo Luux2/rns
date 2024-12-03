@@ -14,6 +14,8 @@ export const PlayerProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const [players, setPlayers] = useState<Player[]>([]);
     const [playerIdCounter, setPlayerIdCounter] = useState<number>(0);
 
+
+
     return (
         <PlayerContext.Provider value={{ players, setPlayers, playerIdCounter, setPlayerIdCounter }}>
             {children}
