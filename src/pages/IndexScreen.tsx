@@ -2,45 +2,67 @@ import Header from "../components/Header.tsx";
 import { useState, useRef, useEffect } from "react";
 import {PlusIcon, UserIcon, ViewColumnsIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useNavigate} from "react-router-dom";
-import {usePlayerContext} from "../context/PlayerContext.tsx";
+import {Player, usePlayerContext} from "../context/PlayerContext.tsx";
+
 
 export const IndexScreen = () => {
     const navigate = useNavigate();
-    const {players, setPlayers} = usePlayerContext();
+    const { players, setPlayers, playerIdCounter, setPlayerIdCounter } = usePlayerContext();
     const [playerName, setPlayerName] = useState<string>("");
-    const [counter, setCounter] = useState<number>(0);
-    const [courts, setCourts] = useState<number>(0);
 
     const listRef = useRef<HTMLDivElement>(null);
 
     const addPlayer = (playerName: string) => {
-        if (playerName === "") {
-            return;
-        }
-        setPlayers([...players, playerName]);
-        setCounter(counter + 1);
-        setCourts(Math.ceil((counter + 1) / 4));
+        if (playerName === "") return;
+
+        // Generér et unikt navn
+        const uniqueName = generateUniqueName(playerName, players);
+
+        const newPlayer: Player = {
+            id: playerIdCounter,
+            name: uniqueName,
+            points: 0,
+            wins: 0,
+            losses: 0,
+            draws: 0,
+        };
+
+        setPlayers([...players, newPlayer]);
+        setPlayerIdCounter(playerIdCounter + 1);
         setPlayerName("");
     };
 
-    const removePlayer = (index: number) => {
-        const newPlayers = players.filter((_, i) => i !== index);
+
+
+
+    const removePlayer = (id: number) => {
+        const newPlayers = players.filter((player) => player.id !== id);
         setPlayers(newPlayers);
-        setCounter(counter - 1);
-        setCourts(Math.ceil(newPlayers.length / 4));
-    }
+    };
+
+    const generateUniqueName = (name: string, players: Player[]): string => {
+        let newName = name;
+        let count = 1;
+
+        while (players.some((player) => player.name === newName)) {
+            newName = `${name} (${count})`;
+            count++;
+        }
+
+        return newName;
+    };
+
+
 
     const resetGame = () => {
         setPlayers([]);
-        setCounter(0);
-        setCourts(0);
         setPlayerName("");
     }
 
     const shufflePlayers = () => {
-        const shuffledPlayers = players.sort(() => Math.random() - 0.5);
-        setPlayers(shuffledPlayers);
-    }
+        const shuffled = [...players].sort(() => Math.random() - 0.5);
+        setPlayers(shuffled);
+    };
 
     const startTournament = () => {
         shufflePlayers();
@@ -60,12 +82,12 @@ export const IndexScreen = () => {
     return (
         <>
             <Header />
-            <div className="mb-4 flex justify-between">
+            <div className="my-4 flex justify-between mx-5">
             <div className="flex p-4">
                 <UserIcon className="h-8 w-8" />
-                <h1 className="ml-1 text-2xl">{counter}</h1>
+                <h1 className="ml-1 text-2xl">{players.length}</h1>
                 <ViewColumnsIcon className="ml-10 h-8 w-8" />
-                <h1 className="ml-1 text-2xl">{courts}</h1>
+                <h1 className="ml-1 text-2xl">{Math.ceil(players.length / 4)}</h1>
             </div>
 
                 <div className="flex justify-end space-x-4">
@@ -77,7 +99,7 @@ export const IndexScreen = () => {
                     >
                         <span
                             className={`font-medium ${
-                                players.length < 4 ? "text-gray-600" : "group-hover:text-red-500 group-active:text-red-500"
+                                players.length < 1 ? "text-gray-600" : "group-hover:text-red-500 group-active:text-red-500"
                             }`}
                         >
                             Nulstil
@@ -119,12 +141,13 @@ export const IndexScreen = () => {
                 className="flex-col p-4 overflow-y-auto pb-4"
                 style={{maxHeight: "calc(100vh - 370px)"}}
             >
-                {players.map((player: any, index: any) => (
-                    <div className="flex justify-between border-b mb-2 p-2 text-xl" key={index}>
-                        {player}
-                        <XMarkIcon className="text-red-500 h-8 w-8 cursor-pointer" onClick={() => removePlayer(index)}/>
+                {players.map((player) => (
+                    <div className="flex justify-between border-b mb-2 p-2 text-xl" key={player.id}>
+                        {player.name}
+                        <XMarkIcon className="text-red-500 h-8 w-8 cursor-pointer" onClick={() => removePlayer(player.id)} />
                     </div>
                 ))}
+
             </div>
 
 
@@ -148,9 +171,10 @@ export const IndexScreen = () => {
                     </span>
                     <div>
                         <PlusIcon
-                            className="h-8 w-8 cursor-pointer"
-                            onClick={() => addPlayer(playerName)}
+                            className={`h-8 w-8 cursor-pointer ${playerName === "" ? "text-gray-400" : ""}`}
+                            onClick={playerName !== "" ? () => addPlayer(playerName.trim()) : undefined}
                         />
+
                     </div>
                 </label>
             </div>

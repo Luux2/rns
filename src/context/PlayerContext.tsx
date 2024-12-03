@@ -1,21 +1,36 @@
-import React, { createContext, useState, useContext } from "react";
+import React, {createContext, useState, useContext, ReactNode, FC, Dispatch, SetStateAction} from "react";
+
+export type Player = {
+    id: number;
+    name: string;
+    points: number;
+    wins: number;
+    losses: number;
+    draws: number;
+};
 
 type PlayerContextType = {
-    players: string[];
-    setPlayers: React.Dispatch<React.SetStateAction<string[]>>;
+    players: Player[];
+    setPlayers: Dispatch<React.SetStateAction<Player[]>>;
+    playerIdCounter: number;
+    setPlayerIdCounter: Dispatch<SetStateAction<number>>;
 };
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [players, setPlayers] = useState<string[]>([]);
+export const PlayerProvider: FC<{ children: ReactNode }> = ({ children }) => {
+    const [players, setPlayers] = useState<Player[]>([]);
+    const [playerIdCounter, setPlayerIdCounter] = useState<number>(1);
 
     return (
-        <PlayerContext.Provider value={{ players, setPlayers }}>
+        <PlayerContext.Provider value={{ players, setPlayers, playerIdCounter, setPlayerIdCounter }}>
             {children}
         </PlayerContext.Provider>
     );
 };
+
+
+
 
 export const usePlayerContext = () => {
     const context = useContext(PlayerContext);
