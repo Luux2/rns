@@ -2,7 +2,8 @@ import Header from "../components/Header.tsx";
 import { useState, useRef, useEffect } from "react";
 import {PlusIcon, UserIcon, ViewColumnsIcon, XMarkIcon} from "@heroicons/react/24/outline";
 import {useNavigate} from "react-router-dom";
-import {Player, usePlayerContext} from "../context/PlayerContext.tsx";
+import {usePlayerContext} from "../context/PlayerContext.tsx";
+import {Player} from "../interfaces/interfaces.ts";
 
 
 export const IndexScreen = () => {
@@ -15,7 +16,7 @@ export const IndexScreen = () => {
     const addPlayer = (playerName: string) => {
         if (playerName === "") return;
 
-        // Generér et unikt navn
+
         const uniqueName = generateUniqueName(playerName, players);
 
         const newPlayer: Player = {
@@ -87,7 +88,7 @@ export const IndexScreen = () => {
                 <UserIcon className="h-8 w-8" />
                 <h1 className="ml-1 text-2xl">{players.length}</h1>
                 <ViewColumnsIcon className="ml-10 h-8 w-8" />
-                <h1 className="ml-1 text-2xl">{Math.ceil(players.length / 4)}</h1>
+                <h1 className="ml-1 text-2xl">{Math.floor(players.length / 4)}</h1>
             </div>
 
                 <div className="flex justify-end space-x-4">

@@ -1,13 +1,5 @@
 import React, {createContext, useState, useContext, ReactNode, FC, Dispatch, SetStateAction} from "react";
-
-export type Player = {
-    id: number;
-    name: string;
-    points: number;
-    wins: number;
-    losses: number;
-    draws: number;
-};
+import {Player} from "../interfaces/interfaces.ts";
 
 type PlayerContextType = {
     players: Player[];
@@ -20,7 +12,7 @@ const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
 export const PlayerProvider: FC<{ children: ReactNode }> = ({ children }) => {
     const [players, setPlayers] = useState<Player[]>([]);
-    const [playerIdCounter, setPlayerIdCounter] = useState<number>(1);
+    const [playerIdCounter, setPlayerIdCounter] = useState<number>(0);
 
     return (
         <PlayerContext.Provider value={{ players, setPlayers, playerIdCounter, setPlayerIdCounter }}>

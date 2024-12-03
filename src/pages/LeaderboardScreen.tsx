@@ -17,7 +17,7 @@ const LeaderboardScreen = () => {
             <Animation>
             <Header />
 
-            {/* Table header */}
+
             <div className="m-6 pr-2 items-center flex justify-between border-b pb-2">
                 <div>
                     <ArrowLeftCircleIcon className="h-10" onClick={handleNavigateBack}/>
@@ -28,7 +28,6 @@ const LeaderboardScreen = () => {
                 </div>
             </div>
 
-            {/* Player data */}
             <div className="m-6 space-y-2 overflow-y-scroll max-h-[60vh]">
                 {sortedPlayers.map((player, index) => (
 
