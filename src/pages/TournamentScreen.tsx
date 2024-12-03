@@ -1,8 +1,8 @@
-import { usePlayerContext } from "../context/PlayerContext";
+import {usePlayerContext} from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import { useState, useEffect } from "react";
-import { Button } from "@headlessui/react";
-import { useNavigate } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {Button} from "@headlessui/react";
+import {useNavigate} from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {ArrowLeftIcon, ArrowLeftStartOnRectangleIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import {Player} from "../interfaces/interfaces.ts";
@@ -14,8 +14,6 @@ export const TournamentScreen = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [currentTeam, setCurrentTeam] = useState<Player[]>([]); // Det hold, der skal opdateres
     const [opponentTeam, setOpponentTeam] = useState<Player[]>([]); // Det hold, der skal opdateres
-
-
 
     const [playerScores, setPlayerScores] = useState<Player[]>(
         players.map((player) => ({ ...player, roundPoints: 0 }))
@@ -63,11 +61,9 @@ export const TournamentScreen = () => {
     }, [playerScores, setPlayers]);
 
 
-
     // Navigation
     const handleNextRound = () => {
         setCurrentRound(currentRound + 1);
-        // Implementer eventuelt logik for næste runde her
     };
 
     const handlePreviousRound = () => {
@@ -75,6 +71,17 @@ export const TournamentScreen = () => {
             setCurrentRound(currentRound - 1);
         }
     };
+
+    const allMatchesHaveScores = () => {
+        return matches.every((match) => {
+            const scores = match.map((player) => player.points || 0);
+            const totalScore = scores.reduce((a, b) => a + b, 0);
+            return totalScore > 0; // Kampen skal have en score højere end 0
+        });
+    };
+
+
+
 
     const handleLeaderboard = () => navigate("/leaderboard");
     const handleExit = () => navigate("/");
@@ -127,14 +134,19 @@ export const TournamentScreen = () => {
                 </div>
                 <div className="flex justify-between px-6">
                     <ArrowLeftIcon
-                        className="h-8 w-8 text-white cursor-pointer"
+                        className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
                         onClick={handlePreviousRound}
+                        aria-disabled={currentRound === 1}
                     />
                     <h1 className="text-center text-2xl font-bold mb-3">Runde {currentRound}</h1>
                     <ArrowRightIcon
-                        className="h-8 w-8 text-white cursor-pointer"
-                        onClick={handleNextRound}
+                        className={`h-8 w-8 ${
+                            allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
+                        }`}
+                        onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                        aria-disabled={!allMatchesHaveScores()}
                     />
+
                 </div>
 
 

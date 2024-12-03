@@ -38,14 +38,17 @@ const LeaderboardScreen = () => {
                              ${index === 2 ? "bg-gradient-to-r from-yellow-700 to-white" : "bg-white"} `}
                     >
                         <div>
-                            <h3 className="text-black font-semibold">{index +1}. {player.name }</h3>
+                            <h3 className="text-black font-semibold">{index + 1}. {player.name}</h3>
                         </div>
-                        <div className="flex space-x-16">
+                        <div className="grid grid-cols-2 gap-9">
                             <h3 className="text-black">
                                 {player.wins}-{player.draws}-{player.losses}
                             </h3>
-                            <h3 className="text-black font-semibold text-right">{player.points}</h3>
+                            <h3 className="text-black font-semibold text-right">
+                                {player.points}
+                            </h3>
                         </div>
+
                     </div>
                 ))}
             </div>
