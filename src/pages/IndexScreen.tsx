@@ -22,10 +22,12 @@ export const IndexScreen = () => {
         const newPlayer: Player = {
             id: playerIdCounter,
             name: uniqueName,
+            roundPoints: 0,
             points: 0,
             wins: 0,
             losses: 0,
             draws: 0,
+            currentRoundScore: 0
         };
 
         setPlayers([...players, newPlayer]);
@@ -70,6 +72,12 @@ export const IndexScreen = () => {
         navigate("/turnering");
     }
 
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter' && playerName.trim() !== "") {
+            addPlayer(playerName.trim());
+        }
+    };
+
     useEffect(() => {
         if (listRef.current) {
             listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -93,14 +101,14 @@ export const IndexScreen = () => {
 
                 <div className="flex justify-end space-x-4">
                     <a
-                        className={`"h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
+                        className={`"cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
                         px-2 py-3 transition-colors ${players.length < 1 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"}`}
                         onClick={() => resetGame()}
                         aria-disabled={players.length < 1}
                     >
                         <span
                             className={`font-medium ${
-                                players.length < 1 ? "text-gray-600" : "group-hover:text-red-500 group-active:text-red-500"
+                                players.length < 1 ? "text-gray-600" : "cursor-pointer group-hover:text-red-500 group-active:text-red-500"
                             }`}
                         >
                             Nulstil
@@ -112,14 +120,14 @@ export const IndexScreen = () => {
                     </a>
                     <a
                         className={`h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
-                            players.length < 4 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
+                            players.length < 4 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "cursor-pointer bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
                         }`}
                         onClick={players.length >= 4 ? () => startTournament() : undefined}
                         aria-disabled={players.length < 4}
                     >
     <span
         className={`font-medium ${
-            players.length < 4 ? "text-gray-600" : "group-hover:text-sky-500 group-active:text-sky-500"
+            players.length < 4 ? " text-gray-600" : "cursor-pointer group-hover:text-sky-500 group-active:text-sky-500"
         }`}
     >
         Start turnering
@@ -162,6 +170,7 @@ export const IndexScreen = () => {
                         id="playername"
                         value={playerName}
                         onChange={(e) => setPlayerName(e.target.value)}
+                        onKeyPress={handleKeyPress}
                         placeholder="playername"
                         className="peer h-8 w-full mt-2 border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 text-xl"
                     />
