@@ -120,7 +120,7 @@ export const TournamentScreen = () => {
             <Animation>
                 <Header />
 
-                <div className="grid grid-cols-[65%_35%]">
+                <div className="grid grid-cols-[75%_25%]">
 
                     <div className="col-span-1">
                     <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
@@ -162,7 +162,7 @@ export const TournamentScreen = () => {
                                         match[idx] ? (
                                             <div
                                                 key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-black"
+                                                className="whitespace-nowrap overflow-x-hidden text-black mr-2"
                                             >
                                                 <h1>{match[idx].name}</h1>
                                             </div>
@@ -190,7 +190,7 @@ export const TournamentScreen = () => {
                                         match[idx] ? (
                                             <div
                                                 key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-end text-black"
+                                                className="whitespace-nowrap overflow-x-hidden text-end text-black ml-2"
                                             >
                                                 <h1>{match[idx].name}</h1>
                                             </div>
