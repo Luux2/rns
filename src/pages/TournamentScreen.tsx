@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {usePlayerContext} from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import {useEffect, useState} from "react";
+import {useState, useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {ArrowLeftIcon, ArrowLeftStartOnRectangleIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
@@ -12,14 +13,16 @@ export const TournamentScreen = () => {
     const { players, setPlayers } = usePlayerContext();
     const [currentRound, setCurrentRound] = useState(1);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentTeam, setCurrentTeam] = useState<Player[]>([]); // Det hold, der skal opdateres
-    const [opponentTeam, setOpponentTeam] = useState<Player[]>([]); // Det hold, der skal opdateres
+    const [currentTeam, setCurrentTeam] = useState<Player[]>([]); 
+    const [opponentTeam, setOpponentTeam] = useState<Player[]>([]); 
 
     const [playerScores, setPlayerScores] = useState<Player[]>(
-        players.map((player) => ({ ...player, roundPoints: 0 }))
+        players.map((player) => ({ 
+            ...player, 
+            roundPoints: 0,
+            currentRoundScore: 0 // New field to track current round's temporary score
+        }))
     );
-
-
 
     const matches: Player[][] = [];
     for (let i = 0; i < playerScores.length; i += 4) {
@@ -32,48 +35,78 @@ export const TournamentScreen = () => {
     const updateTeamPoints = (team: Player[], opponentTeam: Player[], newPoints: number) => {
         setPlayerScores((prevScores) =>
             prevScores.map((player) => {
+                // Update current round score for the specific team
                 if (team.some((teammate) => teammate.id === player.id)) {
-                    // Opdater valgte holds point
-                    return { ...player, points: newPoints };
-                } else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-                    // Opdater modstanderholdets point
-                    return { ...player, points: 32 - newPoints };
+                    return { 
+                        ...player, 
+                        currentRoundScore: newPoints,
+                        roundPoints: newPoints 
+                    };
+                } 
+                // Update opponent team's score
+                else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
+                    return { 
+                        ...player, 
+                        currentRoundScore: 32 - newPoints,
+                        roundPoints: 32 - newPoints 
+                    };
                 }
-                return player; // Ingen ændringer for andre spillere
+                return player;
             })
         );
-        closeDialog(); // Luk dialogen efter opdatering
+        closeDialog();
     };
 
-    const remainingPlayers = playerScores.slice(matches.length * 4);
     const allMatchesHaveScores = () => {
         if (matches.length > 0) {
             return matches.every((match) => {
                 const scores = match.map((player) => player.roundPoints || 0);
                 const totalScore = scores.reduce((a, b) => a + b, 0);
-                return totalScore > 0; // Ensure all matches have a score
+                return totalScore > 0;
             });
         }
         return false;
     };
 
-    useEffect(() => {
-        const updatedScores = playerScores.map((player) => ({
-            ...player,
-            score: remainingPlayers.some((rp) => rp.id === player.id) ? player.points + 16 : player.points,
-        }));
-        setPlayerScores(updatedScores);
-    }, []);
-
     const handleNextRound = () => {
         if (allMatchesHaveScores()) {
-            // Add round points to the player's total points
+            // Update player stats based on round performance
             const updatedScores = playerScores.map((player) => {
-                return {
-                    ...player,
-                    points: player.points + player.roundPoints, // Add round points to total points
-                    roundPoints: 0, // Reset round points after adding them to total points
-                };
+                // Calculate wins, losses, draws
+                const matchingMatch = matches.find(match => 
+                    match.some(matchPlayer => matchPlayer.id === player.id)
+                );
+
+                if (matchingMatch) {
+                    const playerInMatch = matchingMatch.find(p => p.id === player.id);
+                    const opponentTeamInMatch = matchingMatch.filter(p => p.id !== player.id);
+                    
+                    const playerRoundScore = playerInMatch?.roundPoints || 0;
+                    const opponentTeamScore = opponentTeamInMatch.reduce((sum, p) => sum + (p.roundPoints || 0), 0);
+
+                    let wins = player.wins;
+                    let losses = player.losses;
+                    let draws = player.draws;
+
+                    if (playerRoundScore > opponentTeamScore) {
+                        wins += 1;
+                    } else if (playerRoundScore < opponentTeamScore) {
+                        losses += 1;
+                    } else {
+                        draws += 1;
+                    }
+
+                    return {
+                        ...player,
+                        points: player.points + player.roundPoints, // Add round points to total points
+                        roundPoints: 0, // Reset round points
+                        currentRoundScore: 0, // Reset current round score
+                        wins,
+                        losses,
+                        draws
+                    };
+                }
+                return player;
             });
 
             // Sort players by total points in descending order
@@ -88,12 +121,19 @@ export const TournamentScreen = () => {
                     newMatches.push([matchPlayers[0], matchPlayers[2], matchPlayers[1], matchPlayers[3]]);
                 }
             }
+
+            // Update players and increment round
+            setPlayerScores(sortedPlayers);
+            setCurrentRound(prevRound => prevRound + 1);
         }
-    }; // Closing the handleNextRound function here
+    };
+    useEffect(() => {
+        setPlayers(playerScores);
+      }, [playerScores, setPlayers]);
 
     const handlePreviousRound = () => {
         if (currentRound > 1) {
-            setCurrentRound(currentRound - 1); // Go back one round
+            setCurrentRound(currentRound - 1);
         }
     };
 
@@ -108,7 +148,6 @@ export const TournamentScreen = () => {
         setIsDialogOpen(true);
     };
 
-
     const closeDialog = () => {
         setCurrentTeam([]);
         setIsDialogOpen(false);
@@ -117,16 +156,21 @@ export const TournamentScreen = () => {
     const resetPoints = () => {
         setPlayerScores((prevScores) =>
             prevScores.map((player) => {
-                if (currentTeam.some((teammate) => teammate.id === player.id)) {
-                    return { ...player, roundPoints: 0 }; // Reset only the roundPoints, preserve the rest
-                } else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-                    return { ...player, roundPoints: 0 }; // Reset only the roundPoints, preserve the rest
+                if (currentTeam.some((teammate) => teammate.id === player.id) || 
+                    opponentTeam.some((opponent) => opponent.id === player.id)) {
+                    return { 
+                        ...player, 
+                        roundPoints: 0,
+                        currentRoundScore: 0 
+                    };
                 }
-                return player; // No change for other players
+                return player;
             })
         );
-        closeDialog(); // Close dialog after reset
+        closeDialog();
     };
+
+    const remainingPlayers = playerScores.slice(matches.length * 4);
 
     return (
         <>
@@ -182,14 +226,14 @@ export const TournamentScreen = () => {
                                     <div className="flex justify-center items-center text-2xl text-black">
                                         <span className="cursor-pointer font-mono"
                                             onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
-                                            {match[0]?.roundPoints || 0}
+                                            {match[0]?.currentRoundScore ?? 0}
                                         </span>
                                         <h1 className="font-mono mx-2">-</h1>
                                         <span
                                             className="cursor-pointer font-mono"
                                             onClick={() =>
                                                 openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
-                                            {match[1]?.roundPoints || 0}
+                                            {match[1]?.currentRoundScore ?? 0}
                                         </span>
                                     </div>
 

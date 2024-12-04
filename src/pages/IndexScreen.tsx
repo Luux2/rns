@@ -27,6 +27,7 @@ export const IndexScreen = () => {
             wins: 0,
             losses: 0,
             draws: 0,
+            currentRoundScore: 0
         };
 
         setPlayers([...players, newPlayer]);
