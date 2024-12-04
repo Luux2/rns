@@ -123,88 +123,88 @@ export const TournamentScreen = () => {
                 <div className="grid grid-cols-[75%_25%]">
 
                     <div className="col-span-1">
-                    <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
-                        <h1 className="text-lg font-semibold">🔝 Venstre par server først</h1>
-                        <h1 className="text-center text-lg font-semibold">☕️ Altid gratis kaffe</h1>
-                    </div>
+                        <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
+                            <h1 className="text-lg font-semibold">🔝 Venstre par server først</h1>
+                            <h1 className="text-center text-lg font-semibold">☕️ Altid gratis kaffe</h1>
+                        </div>
 
-                    <div className="flex justify-between px-6">
-                        <ArrowLeftIcon
-                            className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
-                            onClick={handlePreviousRound}
-                            aria-disabled={currentRound === 1}
-                        />
-                        <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
-                        <ArrowRightIcon
-                            className={`h-8 w-8 ${
-                                allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
-                            }`}
-                            onClick={allMatchesHaveScores() ? handleNextRound : undefined}
-                            aria-disabled={!allMatchesHaveScores()}
-                        />
+                        <div className="flex justify-between px-6">
+                            <ArrowLeftIcon
+                                className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
+                                onClick={handlePreviousRound}
+                                aria-disabled={currentRound === 1}
+                            />
+                            <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
+                            <ArrowRightIcon
+                                className={`h-8 w-8 ${
+                                    allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
+                                }`}
+                                onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                                aria-disabled={!allMatchesHaveScores()}
+                            />
 
-                    </div>
+                        </div>
 
 
-                    <div className="mx-5 grid grid-cols-3 gap-4 mt-4">
-                        {matches.map((match, index) => (
-                            <div
-                                key={index}
-                                className="relative mb-6 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
-                            >
+                        <div className="mx-5 grid grid-cols-3 gap-x-4 gap-y-10 mt-4 sticky top-4">
+                            {matches.map((match, index) => (
                                 <div
-                                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
-                                    <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
-                                </div>
+                                    key={index}
+                                    className="relative h-20 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
+                                >
+                                    <div
+                                        className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
+                                        <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
+                                    </div>
 
-                                <div>
-                                    {[0, 2].map((idx) =>
-                                        match[idx] ? (
-                                            <div
-                                                key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-black mr-2"
-                                            >
-                                                <h1>{match[idx].name}</h1>
-                                            </div>
-                                        ) : null
-                                    )}
-                                </div>
+                                    <div>
+                                        {[0, 2].map((idx) =>
+                                            match[idx] ? (
+                                                <div
+                                                    key={idx}
+                                                    className="text-black"
+                                                >
+                                                    <h1 className="truncate pr-3">{match[idx].name}</h1>
+                                                </div>
+                                            ) : null
+                                        )}
+                                    </div>
 
-                                <div className="flex justify-center items-center text-2xl text-black">
+                                    <div className="flex justify-center items-center text-2xl text-black">
                                 <span className="cursor-pointer font-mono"
                                       onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
                                     {match[0]?.points || 0}
                                 </span>
-                                    <h1 className="font-mono mx-2">-</h1>
-                                    <span
-                                        className="cursor-pointer font-mono"
-                                        onClick={() =>
-                                            openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
+                                        <h1 className="font-mono mx-2">-</h1>
+                                        <span
+                                            className="cursor-pointer font-mono"
+                                            onClick={() =>
+                                                openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
                                     {match[1]?.points || 0}
                                 </span>
-                                </div>
+                                    </div>
 
 
-                                <div>
-                                    {[1, 3].map((idx) =>
-                                        match[idx] ? (
-                                            <div
-                                                key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-end text-black ml-2"
-                                            >
-                                                <h1>{match[idx].name}</h1>
-                                            </div>
-                                        ) : null
-                                    )}
+                                    <div>
+                                        {[1, 3].map((idx) =>
+                                            match[idx] ? (
+                                                <div
+                                                    key={idx}
+                                                    className="text-black"
+                                                >
+                                                    <h1 className="truncate pl-3">{match[idx].name}</h1>
+                                                </div>
+                                            ) : null
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
 
                     {/* Højre kolonne */}
                     <div className="col-span-1">
-                        <Leaderboard />
+                        <Leaderboard/>
                     </div>
 
 
@@ -248,13 +248,14 @@ export const TournamentScreen = () => {
 
 
             {remainingPlayers.length > 0 && (
-                <div className="fixed bottom-0 right-0 p-4 flex">
-                    <h2 className="text-lg font-bold text-red-500">Sidder over (16 point): </h2>
+                <div className="animate-pulse fixed bottom-0 left-1/2 transform -translate-x-1/2 flex justify-center items-center py-4">
+                    <h2 className="text-lg font-bold text-red-500">Sidder over (16 point):</h2>
                     <p className="text-xl ml-2">
                         {remainingPlayers.map((player) => player.name).join(', ')}
                     </p>
                 </div>
             )}
+
 
 
             <div className="fixed bottom-0 left-0 p-4">

@@ -164,6 +164,12 @@ export const IndexScreen = () => {
                         onChange={(e) => setPlayerName(e.target.value)}
                         placeholder="playername"
                         className="peer h-8 w-full mt-2 border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 text-xl"
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && playerName !== "") {
+                                addPlayer(playerName.trim());
+                            }
+                        }
+                        }
                     />
                     <span
                         className="absolute start-3 top-3 -translate-y-1/2 text-gray-400 transition-all peer-placeholder-shown:top-1/2 peer-placeholder-shown:text-sm peer-focus:top-3 peer-focus:text-xs"
@@ -175,7 +181,6 @@ export const IndexScreen = () => {
                             className={`h-8 w-8 cursor-pointer ${playerName === "" ? "text-gray-400" : ""}`}
                             onClick={playerName !== "" ? () => addPlayer(playerName.trim()) : undefined}
                         />
-
                     </div>
                 </label>
             </div>
