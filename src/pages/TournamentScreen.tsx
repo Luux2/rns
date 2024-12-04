@@ -45,8 +45,17 @@ export const TournamentScreen = () => {
         closeDialog(); // Luk dialogen efter opdatering
     };
 
-
     const remainingPlayers = playerScores.slice(matches.length * 4);
+    const allMatchesHaveScores = () => {
+        if (matches.length > 0) {
+            return matches.every((match) => {
+                const scores = match.map((player) => player.roundPoints || 0);
+                const totalScore = scores.reduce((a, b) => a + b, 0);
+                return totalScore > 0; // Ensure all matches have a score
+            });
+        }
+        return false;
+    };
 
     useEffect(() => {
         const updatedScores = playerScores.map((player) => ({
@@ -56,29 +65,35 @@ export const TournamentScreen = () => {
         setPlayerScores(updatedScores);
     }, []);
 
-    useEffect(() => {
-        setPlayers(playerScores); // Synkroniser `playerScores` med context
-    }, [playerScores, setPlayers]);
-
-
-    // Navigation
     const handleNextRound = () => {
-        setCurrentRound(currentRound + 1);
-    };
+        if (allMatchesHaveScores()) {
+            // Add round points to the player's total points
+            const updatedScores = playerScores.map((player) => {
+                return {
+                    ...player,
+                    points: player.points + player.roundPoints, // Add round points to total points
+                    roundPoints: 0, // Reset round points after adding them to total points
+                };
+            });
+
+            // Sort players by total points in descending order
+            const sortedPlayers = [...updatedScores].sort((a, b) => b.points - a.points);
+
+            // Create new matches: pair 1 & 3, 2 & 4, etc.
+            const newMatches: Player[][] = [];
+            for (let i = 0; i < sortedPlayers.length; i += 4) {
+                const matchPlayers = sortedPlayers.slice(i, i + 4);
+                if (matchPlayers.length === 4) {
+                    // Pair the players by their ranking (1st & 3rd, 2nd & 4th)
+                    newMatches.push([matchPlayers[0], matchPlayers[2], matchPlayers[1], matchPlayers[3]]);
+                }
+            }
+        }
+    }; // Closing the handleNextRound function here
 
     const handlePreviousRound = () => {
         if (currentRound > 1) {
-            setCurrentRound(currentRound - 1);
-        }
-    };
-
-    const allMatchesHaveScores = () => {
-        if (matches.length > 1) {
-            return matches.every((match) => {
-                const scores = match.map((player) => player.points || 0);
-                const totalScore = scores.reduce((a, b) => a + b, 0);
-                return totalScore > 0;
-            });
+            setCurrentRound(currentRound - 1); // Go back one round
         }
     };
 
@@ -103,111 +118,102 @@ export const TournamentScreen = () => {
         setPlayerScores((prevScores) =>
             prevScores.map((player) => {
                 if (currentTeam.some((teammate) => teammate.id === player.id)) {
-                    return { ...player, points: 0 };
+                    return { ...player, roundPoints: 0 }; // Reset only the roundPoints, preserve the rest
                 } else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-                    return { ...player, points: 0 };
+                    return { ...player, roundPoints: 0 }; // Reset only the roundPoints, preserve the rest
                 }
-                return player;
+                return player; // No change for other players
             })
         );
-        closeDialog();
-    }
-
-
+        closeDialog(); // Close dialog after reset
+    };
 
     return (
         <>
             <Animation>
                 <Header />
-
                 <div className="grid grid-cols-[75%_25%]">
-
                     <div className="col-span-1">
-                    <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
-                        <h1 className="text-lg font-semibold">🔝 Venstre par server først</h1>
-                        <h1 className="text-center text-lg font-semibold">☕️ Altid gratis kaffe</h1>
-                    </div>
+                        <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
+                            <h1 className="text-lg font-semibold">🔝 Venstre par server først</h1>
+                            <h1 className="text-center text-lg font-semibold">☕️ Altid gratis kaffe</h1>
+                        </div>
 
-                    <div className="flex justify-between px-6">
-                        <ArrowLeftIcon
-                            className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
-                            onClick={handlePreviousRound}
-                            aria-disabled={currentRound === 1}
-                        />
-                        <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
-                        <ArrowRightIcon
-                            className={`h-8 w-8 ${
-                                allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
-                            }`}
-                            onClick={allMatchesHaveScores() ? handleNextRound : undefined}
-                            aria-disabled={!allMatchesHaveScores()}
-                        />
+                        <div className="flex justify-between px-6">
+                            <ArrowLeftIcon
+                                className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
+                                onClick={handlePreviousRound}
+                                aria-disabled={currentRound === 1}
+                            />
+                            <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
+                            <ArrowRightIcon
+                                className={`h-8 w-8 ${
+                                    allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
+                                }`}
+                                onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                                aria-disabled={!allMatchesHaveScores()}
+                            />
+                        </div>
 
-                    </div>
-
-
-                    <div className="mx-5 grid grid-cols-3 gap-4 mt-4">
-                        {matches.map((match, index) => (
-                            <div
-                                key={index}
-                                className="relative mb-6 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
-                            >
+                        <div className="mx-5 grid grid-cols-3 gap-4 mt-4">
+                            {matches.map((match, index) => (
                                 <div
-                                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
-                                    <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
-                                </div>
+                                    key={index}
+                                    className="relative mb-6 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
+                                >
+                                    <div
+                                        className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
+                                        <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
+                                    </div>
 
-                                <div>
-                                    {[0, 2].map((idx) =>
-                                        match[idx] ? (
-                                            <div
-                                                key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-black mr-2"
-                                            >
-                                                <h1>{match[idx].name}</h1>
-                                            </div>
-                                        ) : null
-                                    )}
-                                </div>
+                                    <div>
+                                        {[0, 2].map((idx) =>
+                                            match[idx] ? (
+                                                <div
+                                                    key={idx}
+                                                    className="whitespace-nowrap overflow-x-hidden text-black mr-2"
+                                                >
+                                                    <h1>{match[idx].name}</h1>
+                                                </div>
+                                            ) : null
+                                        )}
+                                    </div>
 
-                                <div className="flex justify-center items-center text-2xl text-black">
-                                <span className="cursor-pointer font-mono"
-                                      onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
-                                    {match[0]?.points || 0}
-                                </span>
-                                    <h1 className="font-mono mx-2">-</h1>
-                                    <span
-                                        className="cursor-pointer font-mono"
-                                        onClick={() =>
-                                            openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
-                                    {match[1]?.points || 0}
-                                </span>
-                                </div>
+                                    <div className="flex justify-center items-center text-2xl text-black">
+                                        <span className="cursor-pointer font-mono"
+                                            onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
+                                            {match[0]?.roundPoints || 0}
+                                        </span>
+                                        <h1 className="font-mono mx-2">-</h1>
+                                        <span
+                                            className="cursor-pointer font-mono"
+                                            onClick={() =>
+                                                openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
+                                            {match[1]?.roundPoints || 0}
+                                        </span>
+                                    </div>
 
-
-                                <div>
-                                    {[1, 3].map((idx) =>
-                                        match[idx] ? (
-                                            <div
-                                                key={idx}
-                                                className="whitespace-nowrap overflow-x-hidden text-end text-black ml-2"
-                                            >
-                                                <h1>{match[idx].name}</h1>
-                                            </div>
-                                        ) : null
-                                    )}
+                                    <div>
+                                        {[1, 3].map((idx) =>
+                                            match[idx] ? (
+                                                <div
+                                                    key={idx}
+                                                    className="whitespace-nowrap overflow-x-hidden text-end text-black ml-2"
+                                                >
+                                                    <h1>{match[idx].name}</h1>
+                                                </div>
+                                            ) : null
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
 
-                    {/* Højre kolonne */}
+                    {/* Right Column */}
                     <div className="col-span-1">
                         <Leaderboard />
                     </div>
-
-
                 </div>
             </Animation>
 
@@ -229,18 +235,18 @@ export const TournamentScreen = () => {
                             ))}
                         </div>
                         <div className="flex justify-between">
-                        <button
-                            className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                            onClick={closeDialog}
-                        >
-                            Annuller
-                        </button>
-                        <button
-                            className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                            onClick={resetPoints}
-                        >
-                            Nulstil
-                        </button>
+                            <button
+                                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                                onClick={closeDialog}
+                            >
+                                Annuller
+                            </button>
+                            <button
+                                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                                onClick={resetPoints}
+                            >
+                                Nulstil
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -258,10 +264,9 @@ export const TournamentScreen = () => {
 
 
             <div className="fixed bottom-0 left-0 p-4">
-                <ArrowLeftStartOnRectangleIcon className="h-8 w-8 cursor-pointer" onClick={handleExit}/>
+                <ArrowLeftStartOnRectangleIcon className="h-8 w-8 cursor-pointer" onClick={handleExit} />
             </div>
         </>
     );
 };
-
 export default TournamentScreen;

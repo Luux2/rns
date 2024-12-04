@@ -22,6 +22,7 @@ export const IndexScreen = () => {
         const newPlayer: Player = {
             id: playerIdCounter,
             name: uniqueName,
+            roundPoints: 0,
             points: 0,
             wins: 0,
             losses: 0,
@@ -69,6 +70,12 @@ export const IndexScreen = () => {
         shufflePlayers();
         navigate("/turnering");
     }
+
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if (event.key === 'Enter' && playerName.trim() !== "") {
+            addPlayer(playerName.trim());
+        }
+    };
 
     useEffect(() => {
         if (listRef.current) {
@@ -162,6 +169,7 @@ export const IndexScreen = () => {
                         id="playername"
                         value={playerName}
                         onChange={(e) => setPlayerName(e.target.value)}
+                        onKeyPress={handleKeyPress}
                         placeholder="playername"
                         className="peer h-8 w-full mt-2 border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 text-xl"
                     />

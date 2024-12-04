@@ -1,4 +1,5 @@
 export interface Player {
+    roundPoints: number;
     id: number;
     name: string;
     points: number;
