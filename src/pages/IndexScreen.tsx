@@ -101,14 +101,14 @@ export const IndexScreen = () => {
 
                 <div className="flex justify-end space-x-4">
                     <a
-                        className={`"h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
+                        className={`"cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
                         px-2 py-3 transition-colors ${players.length < 1 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"}`}
                         onClick={() => resetGame()}
                         aria-disabled={players.length < 1}
                     >
                         <span
                             className={`font-medium ${
-                                players.length < 1 ? "text-gray-600" : "group-hover:text-red-500 group-active:text-red-500"
+                                players.length < 1 ? "text-gray-600" : "cursor-pointer group-hover:text-red-500 group-active:text-red-500"
                             }`}
                         >
                             Nulstil
@@ -120,14 +120,14 @@ export const IndexScreen = () => {
                     </a>
                     <a
                         className={`h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
-                            players.length < 4 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
+                            players.length < 4 ? "bg-gray-400 border-gray-400 cursor-not-allowed" : "cursor-pointer bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
                         }`}
                         onClick={players.length >= 4 ? () => startTournament() : undefined}
                         aria-disabled={players.length < 4}
                     >
     <span
         className={`font-medium ${
-            players.length < 4 ? "text-gray-600" : "group-hover:text-sky-500 group-active:text-sky-500"
+            players.length < 4 ? " text-gray-600" : "cursor-pointer group-hover:text-sky-500 group-active:text-sky-500"
         }`}
     >
         Start turnering

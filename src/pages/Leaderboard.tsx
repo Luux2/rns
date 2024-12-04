@@ -3,7 +3,7 @@ import { usePlayerContext } from "../context/PlayerContext.tsx";
 import Animation from "../components/Animation.tsx";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 
-const LeaderboardScreen = () => {
+const Leaderboard = () => {
     const { players } = usePlayerContext();
     const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
 
@@ -46,4 +46,4 @@ const LeaderboardScreen = () => {
     );
 };
 
-export default LeaderboardScreen;
+export default Leaderboard;
