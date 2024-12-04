@@ -1,34 +1,22 @@
-import Header from "../components/Header.tsx";
 import { usePlayerContext } from "../context/PlayerContext.tsx";
-import Animation from "../components/Animation.tsx";
-import {ArrowLeftCircleIcon} from "@heroicons/react/24/outline";
 
-const LeaderboardScreen = () => {
+const Leaderboard = () => {
     const { players } = usePlayerContext();
 
     const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
 
-    const handleNavigateBack = () => {
-        window.history.back();
-    }
-
     return (
         <>
-            <Animation>
-            <Header />
 
 
-            <div className="m-6 pr-2 items-center flex justify-between border-b pb-2">
-                <div>
-                    <ArrowLeftCircleIcon className="h-10" onClick={handleNavigateBack}/>
-                </div>
-                <div className="flex space-x-10">
+            <div className="mt-4 pr-2 items-center flex justify-end border rounded-lg border-gray-500">
+                <div className="flex space-x-6">
                     <h2 className="text-lg font-bold">V-U-T</h2>
                     <h2 className="text-lg font-bold">Point</h2>
                 </div>
             </div>
 
-            <div className="m-6 space-y-2 overflow-y-scroll max-h-[60vh]">
+            <div className="mt-2 space-y-2">
                 {sortedPlayers.map((player, index) => (
 
                     <div
@@ -52,9 +40,8 @@ const LeaderboardScreen = () => {
                     </div>
                 ))}
             </div>
-            </Animation>
         </>
     );
 };
 
-export default LeaderboardScreen;
+export default Leaderboard;

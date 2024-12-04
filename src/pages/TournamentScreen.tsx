@@ -1,11 +1,11 @@
 import {usePlayerContext} from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
 import {useEffect, useState} from "react";
-import {Button} from "@headlessui/react";
 import {useNavigate} from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {ArrowLeftIcon, ArrowLeftStartOnRectangleIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
 import {Player} from "../interfaces/interfaces.ts";
+import Leaderboard from "../components/Leaderboard.tsx";
 
 export const TournamentScreen = () => {
     const navigate = useNavigate();
@@ -73,17 +73,15 @@ export const TournamentScreen = () => {
     };
 
     const allMatchesHaveScores = () => {
-        return matches.every((match) => {
-            const scores = match.map((player) => player.points || 0);
-            const totalScore = scores.reduce((a, b) => a + b, 0);
-            return totalScore > 0; // Kampen skal have en score højere end 0
-        });
+        if (matches.length > 1) {
+            return matches.every((match) => {
+                const scores = match.map((player) => player.points || 0);
+                const totalScore = scores.reduce((a, b) => a + b, 0);
+                return totalScore > 0;
+            });
+        }
     };
 
-
-
-
-    const handleLeaderboard = () => navigate("/leaderboard");
     const handleExit = () => navigate("/");
 
     // Banenumre
@@ -122,86 +120,94 @@ export const TournamentScreen = () => {
             <Animation>
                 <Header />
 
-                <div className="mt-4 mb-3 mx-5 border p-2 rounded-lg border-gray-500 grid grid-cols-3">
-                    <h1 className="p-4 text-xl font-semibold">🔝 Venstre par server først</h1>
-                    <h1 className="text-center p-4 text-xl font-semibold">☕️ Altid gratis kaffe</h1>
-                    <Button
-                        className="bg-gradient-to-b from-yellow-700 to-yellow-300 justify-self-end w-fit h-14 p-4 rounded-lg text-xl font-semibold"
-                        onClick={handleLeaderboard}
-                    >
-                        📊 Se tabellen
-                    </Button>
-                </div>
-                <div className="flex justify-between px-6">
-                    <ArrowLeftIcon
-                        className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
-                        onClick={handlePreviousRound}
-                        aria-disabled={currentRound === 1}
-                    />
-                    <h1 className="text-center text-2xl font-bold mb-3">Runde {currentRound}</h1>
-                    <ArrowRightIcon
-                        className={`h-8 w-8 ${
-                            allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
-                        }`}
-                        onClick={allMatchesHaveScores() ? handleNextRound : undefined}
-                        aria-disabled={!allMatchesHaveScores()}
-                    />
+                <div className="grid grid-cols-[65%_35%]">
 
-                </div>
+                    <div className="col-span-1">
+                    <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
+                        <h1 className="text-lg font-semibold">🔝 Venstre par server først</h1>
+                        <h1 className="text-center text-lg font-semibold">☕️ Altid gratis kaffe</h1>
+                    </div>
+
+                    <div className="flex justify-between px-6">
+                        <ArrowLeftIcon
+                            className={`h-8 w-8 ${currentRound > 1 ? "cursor-pointer" : "text-black cursor-not-allowed"}`}
+                            onClick={handlePreviousRound}
+                            aria-disabled={currentRound === 1}
+                        />
+                        <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
+                        <ArrowRightIcon
+                            className={`h-8 w-8 ${
+                                allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
+                            }`}
+                            onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                            aria-disabled={!allMatchesHaveScores()}
+                        />
+
+                    </div>
 
 
-                <div className="mx-5 grid grid-cols-3 gap-4 mt-4">
-                    {matches.map((match, index) => (
-                        <div
-                            key={index}
-                            className="relative mb-6 p-4 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
-                        >
+                    <div className="mx-5 grid grid-cols-3 gap-4 mt-4">
+                        {matches.map((match, index) => (
                             <div
-                                className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
-                                <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
-                            </div>
+                                key={index}
+                                className="relative mb-6 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
+                            >
+                                <div
+                                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
+                                    <h2 className="text-sm font-bold text-black">Bane {courtNumber[index % courtNumber.length]}</h2>
+                                </div>
 
-                            <div>
-                                {[0, 2].map((idx) =>
-                                    match[idx] ? (
-                                        <div
-                                            key={idx}
-                                            className="whitespace-nowrap overflow-x-hidden text-xl text-black"
-                                        >
-                                            <h1>{match[idx].name}</h1>
-                                        </div>
-                                    ) : null
-                                )}
-                            </div>
+                                <div>
+                                    {[0, 2].map((idx) =>
+                                        match[idx] ? (
+                                            <div
+                                                key={idx}
+                                                className="whitespace-nowrap overflow-x-hidden text-black"
+                                            >
+                                                <h1>{match[idx].name}</h1>
+                                            </div>
+                                        ) : null
+                                    )}
+                                </div>
 
-                            <div className="flex justify-center items-center text-3xl text-black">
-                                <span className="cursor-pointer font-mono" onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
+                                <div className="flex justify-center items-center text-2xl text-black">
+                                <span className="cursor-pointer font-mono"
+                                      onClick={() => openDialog([match[0], match[2]].filter(Boolean), [match[1], match[3]].filter(Boolean))}>
                                     {match[0]?.points || 0}
                                 </span>
-                                <h1 className="font-mono mx-2">-</h1>
-                                <span
-                                    className="cursor-pointer font-mono"
-                                    onClick={() =>
-                                        openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
+                                    <h1 className="font-mono mx-2">-</h1>
+                                    <span
+                                        className="cursor-pointer font-mono"
+                                        onClick={() =>
+                                            openDialog([match[1], match[3]].filter(Boolean), [match[0], match[2]].filter(Boolean))}>
                                     {match[1]?.points || 0}
                                 </span>
-                            </div>
+                                </div>
 
 
-                            <div>
-                                {[1, 3].map((idx) =>
-                                    match[idx] ? (
-                                        <div
-                                            key={idx}
-                                            className="whitespace-nowrap overflow-x-hidden text-end text-xl text-black"
-                                        >
-                                            <h1>{match[idx].name}</h1>
-                                        </div>
-                                    ) : null
-                                )}
+                                <div>
+                                    {[1, 3].map((idx) =>
+                                        match[idx] ? (
+                                            <div
+                                                key={idx}
+                                                className="whitespace-nowrap overflow-x-hidden text-end text-black"
+                                            >
+                                                <h1>{match[idx].name}</h1>
+                                            </div>
+                                        ) : null
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+                </div>
+
+                    {/* Højre kolonne */}
+                    <div className="col-span-1">
+                        <Leaderboard />
+                    </div>
+
+
                 </div>
             </Animation>
 
