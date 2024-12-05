@@ -13,12 +13,16 @@ export const IndexScreen = () => {
 
     const listRef = useRef<HTMLDivElement>(null);
 
+    const saveToLocalStorage = (players: Player[], counter: number) => {
+        localStorage.setItem("players", JSON.stringify(players));
+        localStorage.setItem("playerIdCounter", counter.toString());
+    };
+
     const addPlayer = (playerName: string) => {
         if (playerName === "") return;
-
-
+    
         const uniqueName = generateUniqueName(playerName, players);
-
+    
         const newPlayer: Player = {
             id: playerIdCounter,
             name: uniqueName,
@@ -27,20 +31,22 @@ export const IndexScreen = () => {
             wins: 0,
             losses: 0,
             draws: 0,
-            currentRoundScore: 0
+            currentRoundScore: 0,
         };
-
-        setPlayers([...players, newPlayer]);
+    
+        const updatedPlayers = [...players, newPlayer];
+        setPlayers(updatedPlayers);
         setPlayerIdCounter(playerIdCounter + 1);
+        saveToLocalStorage(updatedPlayers, playerIdCounter + 1);
         setPlayerName("");
     };
 
 
 
-
     const removePlayer = (id: number) => {
-        const newPlayers = players.filter((player) => player.id !== id);
-        setPlayers(newPlayers);
+        const updatedPlayers = players.filter((player) => player.id !== id);
+        setPlayers(updatedPlayers);
+        saveToLocalStorage(updatedPlayers, playerIdCounter);
     };
 
     const generateUniqueName = (name: string, players: Player[]): string => {
@@ -54,18 +60,22 @@ export const IndexScreen = () => {
 
         return newName;
     };
+    
 
 
 
     const resetGame = () => {
         setPlayers([]);
-        setPlayerName("");
-    }
+        setPlayerIdCounter(0);
+        saveToLocalStorage([], 0);
+    };
 
     const shufflePlayers = () => {
         const shuffled = [...players].sort(() => Math.random() - 0.5);
         setPlayers(shuffled);
+        saveToLocalStorage(shuffled, playerIdCounter);
     };
+    
 
     const startTournament = () => {
         shufflePlayers();
@@ -79,13 +89,16 @@ export const IndexScreen = () => {
     };
 
     useEffect(() => {
-        if (listRef.current) {
-            listRef.current.scrollTop = listRef.current.scrollHeight;
+        const storedPlayers = localStorage.getItem("players");
+        const storedCounter = localStorage.getItem("playerIdCounter");
+    
+        if (storedPlayers) {
+            setPlayers(JSON.parse(storedPlayers));
         }
-    }, [players]);
-
-    useEffect(() => {
-        resetGame();
+    
+        if (storedCounter) {
+            setPlayerIdCounter(Number(storedCounter));
+        }
     }, []);
 
     return (

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {usePlayerContext} from "../context/PlayerContext";
+import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import {useState, useEffect} from "react";
-import {useNavigate} from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
-import {ArrowLeftIcon, ArrowLeftStartOnRectangleIcon, ArrowRightIcon} from "@heroicons/react/24/outline";
-import {Player} from "../interfaces/interfaces.ts";
+import { ArrowLeftIcon, ArrowLeftStartOnRectangleIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
 
 export const TournamentScreen = () => {
@@ -13,16 +13,31 @@ export const TournamentScreen = () => {
     const { players, setPlayers } = usePlayerContext();
     const [currentRound, setCurrentRound] = useState(1);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [currentTeam, setCurrentTeam] = useState<Player[]>([]); 
-    const [opponentTeam, setOpponentTeam] = useState<Player[]>([]); 
+    const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
+    const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
 
     const [playerScores, setPlayerScores] = useState<Player[]>(
-        players.map((player) => ({ 
-            ...player, 
+        players.map((player) => ({
+            ...player,
             roundPoints: 0,
             currentRoundScore: 0 // New field to track current round's temporary score
         }))
     );
+    const savePlayersToLocalStorage = (players: Player[]) => {
+        localStorage.setItem("players", JSON.stringify(players));
+    };
+
+    useEffect(() => {
+        const storedPlayers = localStorage.getItem("players");
+        if (storedPlayers) {
+            setPlayerScores(JSON.parse(storedPlayers));
+        }
+    }, []);
+
+    useEffect(() => {
+        savePlayersToLocalStorage(playerScores);
+    }, [playerScores]);
+
 
     const matches: Player[][] = [];
     for (let i = 0; i < playerScores.length; i += 4) {
@@ -37,18 +52,18 @@ export const TournamentScreen = () => {
             prevScores.map((player) => {
                 // Update current round score for the specific team
                 if (team.some((teammate) => teammate.id === player.id)) {
-                    return { 
-                        ...player, 
+                    return {
+                        ...player,
                         currentRoundScore: newPoints,
-                        roundPoints: newPoints 
+                        roundPoints: newPoints
                     };
-                } 
+                }
                 // Update opponent team's score
                 else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-                    return { 
-                        ...player, 
+                    return {
+                        ...player,
                         currentRoundScore: 32 - newPoints,
-                        roundPoints: 32 - newPoints 
+                        roundPoints: 32 - newPoints
                     };
                 }
                 return player;
@@ -70,24 +85,38 @@ export const TournamentScreen = () => {
 
     const handleNextRound = () => {
         if (allMatchesHaveScores()) {
+            // Award 16 points to remaining players
+            const updatedScoresWithRemainingPlayers = playerScores.map((player) => {
+                if (remainingPlayers.some((p) => p.id === player.id)) {
+                    return {
+                        ...player,
+                        roundPoints: 16, // Add 16 points for sitting out
+                        points: player.points + 16, // Update total points
+                    };
+                }
+                return player;
+            });
+    
             // Update player stats based on round performance
-            const updatedScores = playerScores.map((player) => {
-                // Calculate wins, losses, draws
-                const matchingMatch = matches.find(match => 
-                    match.some(matchPlayer => matchPlayer.id === player.id)
+            const updatedScores = updatedScoresWithRemainingPlayers.map((player) => {
+                const matchingMatch = matches.find((match) =>
+                    match.some((matchPlayer) => matchPlayer.id === player.id)
                 );
-
+    
                 if (matchingMatch) {
-                    const playerInMatch = matchingMatch.find(p => p.id === player.id);
-                    const opponentTeamInMatch = matchingMatch.filter(p => p.id !== player.id);
-                    
+                    const playerInMatch = matchingMatch.find((p) => p.id === player.id);
+                    const opponentTeamInMatch = matchingMatch.filter((p) => p.id !== player.id);
+    
                     const playerRoundScore = playerInMatch?.roundPoints || 0;
-                    const opponentTeamScore = opponentTeamInMatch.reduce((sum, p) => sum + (p.roundPoints || 0), 0);
-
+                    const opponentTeamScore = opponentTeamInMatch.reduce(
+                        (sum, p) => sum + (p.roundPoints || 0),
+                        0
+                    );
+    
                     let wins = player.wins;
                     let losses = player.losses;
                     let draws = player.draws;
-
+    
                     if (playerRoundScore > opponentTeamScore) {
                         wins += 1;
                     } else if (playerRoundScore < opponentTeamScore) {
@@ -95,7 +124,7 @@ export const TournamentScreen = () => {
                     } else {
                         draws += 1;
                     }
-
+    
                     return {
                         ...player,
                         points: player.points + player.roundPoints, // Add round points to total points
@@ -103,15 +132,15 @@ export const TournamentScreen = () => {
                         currentRoundScore: 0, // Reset current round score
                         wins,
                         losses,
-                        draws
+                        draws,
                     };
                 }
                 return player;
             });
-
+    
             // Sort players by total points in descending order
             const sortedPlayers = [...updatedScores].sort((a, b) => b.points - a.points);
-
+    
             // Create new matches: pair 1 & 3, 2 & 4, etc.
             const newMatches: Player[][] = [];
             for (let i = 0; i < sortedPlayers.length; i += 4) {
@@ -121,15 +150,16 @@ export const TournamentScreen = () => {
                     newMatches.push([matchPlayers[0], matchPlayers[2], matchPlayers[1], matchPlayers[3]]);
                 }
             }
-
+    
             // Update players and increment round
             setPlayerScores(sortedPlayers);
-            setCurrentRound(prevRound => prevRound + 1);
+            setCurrentRound((prevRound) => prevRound + 1);
         }
     };
+    
     useEffect(() => {
         setPlayers(playerScores);
-      }, [playerScores, setPlayers]);
+    }, [playerScores, setPlayers]);
 
     const handlePreviousRound = () => {
         if (currentRound > 1) {
@@ -156,12 +186,12 @@ export const TournamentScreen = () => {
     const resetPoints = () => {
         setPlayerScores((prevScores) =>
             prevScores.map((player) => {
-                if (currentTeam.some((teammate) => teammate.id === player.id) || 
+                if (currentTeam.some((teammate) => teammate.id === player.id) ||
                     opponentTeam.some((opponent) => opponent.id === player.id)) {
-                    return { 
-                        ...player, 
+                    return {
+                        ...player,
                         roundPoints: 0,
-                        currentRoundScore: 0 
+                        currentRoundScore: 0
                     };
                 }
                 return player;
@@ -171,6 +201,7 @@ export const TournamentScreen = () => {
     };
 
     const remainingPlayers = playerScores.slice(matches.length * 4);
+
 
     return (
         <>
@@ -191,9 +222,8 @@ export const TournamentScreen = () => {
                             />
                             <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
                             <ArrowRightIcon
-                                className={`h-8 w-8 ${
-                                    allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
-                                }`}
+                                className={`h-8 w-8 ${allMatchesHaveScores() ? "cursor-pointer" : "text-black cursor-not-allowed"
+                                    }`}
                                 onClick={allMatchesHaveScores() ? handleNextRound : undefined}
                                 aria-disabled={!allMatchesHaveScores()}
                             />
@@ -268,7 +298,7 @@ export const TournamentScreen = () => {
                             Vælg point for hold: {currentTeam.map((player) => player.name).join(" & ")}
                         </h2>
                         <div className="grid grid-cols-11 gap-2">
-                            {Array.from({length: 33}, (_, i) => (
+                            {Array.from({ length: 33 }, (_, i) => (
                                 <button
                                     key={i}
                                     className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
