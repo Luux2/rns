@@ -19,6 +19,10 @@ export const TournamentScreen = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
+  const [matches, setMatches] = useState<Player[][]>([]);
+
+  //Const players to sitOut
+  const [playersToSitOut, setPlayersToSitOut] = useState<Player[]>([]);
 
   const [playerScores, setPlayerScores] = useState<Player[]>(
     players.map((player) => ({
@@ -27,6 +31,35 @@ export const TournamentScreen = () => {
       currentRoundScore: 0, // New field to track current round's temporary score
     }))
   );
+  useEffect(() => {
+    // Step 1: Determine how many players need to sit out
+    const totalPlayers = playerScores.length;
+    const playersPerMatch = 4;
+    const numPlayersToSitOut = totalPlayers % playersPerMatch;
+
+    // Step 2: Shuffle players randomly
+    const shuffledPlayers = [...playerScores].sort(() => Math.random() - 0.5);
+
+    // Step 3: Select players to sit out
+    const sitOutPlayers = shuffledPlayers.slice(0, numPlayersToSitOut);
+    setPlayersToSitOut(sitOutPlayers);
+
+    // Step 4: Get the remaining players who will play
+    const playersWhoWillPlay = shuffledPlayers.slice(numPlayersToSitOut);
+
+    // Step 5: Create matches with the players who will play
+    const generatedMatches: Player[][] = [];
+    for (let i = 0; i < playersWhoWillPlay.length; i += playersPerMatch) {
+      const matchPlayers = playersWhoWillPlay.slice(i, i + playersPerMatch);
+      if (matchPlayers.length === playersPerMatch) {
+        generatedMatches.push(matchPlayers);
+      }
+    }
+
+    // Set matches state
+    setMatches(generatedMatches);
+  }, [playerScores]); // Re-run when playerScores changes
+
   const savePlayersToLocalStorage = (players: Player[]) => {
     localStorage.setItem("players", JSON.stringify(players));
   };
@@ -37,18 +70,22 @@ export const TournamentScreen = () => {
       setPlayerScores(JSON.parse(storedPlayers));
     }
   }, []);
+  useEffect(() => {
+    if (playersToSitOut.length > 0) {
+      localStorage.setItem("playersToSitOut", JSON.stringify(playersToSitOut));
+    }
+  }, [playersToSitOut]);
+  useEffect(() => {
+    // Load playersToSitOut from localStorage
+    const storedSitOutPlayers = localStorage.getItem("playersToSitOut");
+    if (storedSitOutPlayers) {
+      setPlayersToSitOut(JSON.parse(storedSitOutPlayers));
+    }
+  }, []);
 
   useEffect(() => {
     savePlayersToLocalStorage(playerScores);
-  }, [playerScores]);
-
-  const matches: Player[][] = [];
-  for (let i = 0; i < playerScores.length; i += 4) {
-    const matchPlayers = playerScores.slice(i, i + 4);
-    if (matchPlayers.length === 4) {
-      matches.push(matchPlayers);
-    }
-  }
+  }, [playerScores, players]);
 
   const updateTeamPoints = (
     team: Player[],
@@ -94,11 +131,12 @@ export const TournamentScreen = () => {
     if (allMatchesHaveScores()) {
       // Award 16 points to remaining players
       const updatedScoresWithRemainingPlayers = playerScores.map((player) => {
-        if (remainingPlayers.some((p) => p.id === player.id)) {
+        if (playersToSitOut.some((p) => p.id === player.id)) {
           return {
             ...player,
             roundPoints: 16, // Add 16 points for sitting out
             points: player.points + 16, // Update total points
+            hasSatOut: true, // Mark player as having sat out
           };
         }
         return player;
@@ -147,28 +185,74 @@ export const TournamentScreen = () => {
         return player;
       });
 
-      // Sort players by total points in descending order
-      const sortedPlayers = [...updatedScores].sort(
+      // Shuffle the list of players
+      const shuffledPlayers = [...updatedScores].sort(
+        () => Math.random() - 0.5
+      );
+
+      // Initialize lists for players and sitover players
+      const playersForMatches: Player[] = [];
+      const sitoverPlayers: Player[] = [];
+
+      // Calculate how many players need to sit out
+      const sitoverCount = shuffledPlayers.length % 4;
+
+      // Find players who haven't sat out before
+      const nonSitoutPlayers = shuffledPlayers.filter(
+        (player) => !player.haveSitOut
+      );
+
+      // If there are enough non-sitout players, randomly select sitover players
+      if (nonSitoutPlayers.length >= sitoverCount) {
+        // Randomly select players to sit out
+        for (let i = 0; i < sitoverCount; i++) {
+          const randomIndex = Math.floor(
+            Math.random() * nonSitoutPlayers.length
+          );
+          const selectedPlayer = nonSitoutPlayers.splice(randomIndex, 1)[0];
+          sitoverPlayers.push(selectedPlayer);
+        }
+      }
+
+      // Add remaining non-sitout players to matches
+      playersForMatches.push(...nonSitoutPlayers);
+
+      // If not enough non-sitout players, fill with other players
+      while (playersForMatches.length < shuffledPlayers.length - sitoverCount) {
+        const player = shuffledPlayers.pop()!;
+        if (!sitoverPlayers.includes(player)) {
+          playersForMatches.push(player);
+        }
+      }
+
+      // Add any remaining players to sitover
+      sitoverPlayers.push(...shuffledPlayers);
+
+      // Sort players for matches by points (descending)
+      const sortedMatchPlayers = playersForMatches.sort(
         (a, b) => b.points - a.points
       );
 
-      // Create new matches: pair 1 & 3, 2 & 4, etc.
+      // Create matches by pairing 1st with 3rd, 2nd with 4th
       const newMatches: Player[][] = [];
-      for (let i = 0; i < sortedPlayers.length; i += 4) {
-        const matchPlayers = sortedPlayers.slice(i, i + 4);
-        if (matchPlayers.length === 4) {
-          // Pair the players by their ranking (1st & 3rd, 2nd & 4th)
+      for (let i = 0; i < sortedMatchPlayers.length; i += 4) {
+        const matchGroup = sortedMatchPlayers.slice(i, i + 4);
+
+        if (matchGroup.length === 4) {
           newMatches.push([
-            matchPlayers[0],
-            matchPlayers[2],
-            matchPlayers[1],
-            matchPlayers[3],
+            matchGroup[0], // 1st highest points
+            matchGroup[2], // 3rd highest points
+            matchGroup[1], // 2nd highest points
+            matchGroup[3], // 4th highest points
           ]);
         }
       }
 
-      // Update players and increment round
-      setPlayerScores(sortedPlayers);
+      // Combine sitover players back into the full player list
+      const updatedPlayerList = [...playersForMatches, ...sitoverPlayers];
+
+      // Update state
+      setPlayerScores(updatedPlayerList);
       setCurrentRound((prevRound) => prevRound + 1);
     }
   };
@@ -186,7 +270,20 @@ export const TournamentScreen = () => {
   const handleExit = () => navigate("/");
 
   // Banenumre
-  const courtNumber = ["8", "9", "10", "11", "12", "2", "3", "4", "7"];
+  const courtNumber = [
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "2",
+    "3",
+    "4",
+    "7",
+    "13",
+    "15",
+    "16",
+  ];
 
   const openDialog = (team: Player[], opponentTeam: Player[]) => {
     setCurrentTeam(team);
@@ -217,8 +314,6 @@ export const TournamentScreen = () => {
     );
     closeDialog();
   };
-
-  const remainingPlayers = playerScores.slice(matches.length * 4);
 
   return (
     <>
@@ -362,13 +457,13 @@ export const TournamentScreen = () => {
         </div>
       )}
 
-      {remainingPlayers.length > 0 && (
+      {playersToSitOut.length > 0 && (
         <div className="animate-pulse fixed bottom-0 left-1/2 transform -translate-x-1/2 flex justify-center items-center py-4">
           <h2 className="text-lg font-bold text-red-500">
             Sidder over (16 point):
           </h2>
           <p className="text-xl ml-2">
-            {remainingPlayers.map((player) => player.name).join(", ")}
+            {playersToSitOut.map((player) => player.name).join(", ")}
           </p>
         </div>
       )}
