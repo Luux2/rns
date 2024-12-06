@@ -7,7 +7,6 @@ export interface Player {
     wins: number;
     losses: number;
     draws: number;
-    haveSitOut: boolean;
 }
 
 export interface Team {
