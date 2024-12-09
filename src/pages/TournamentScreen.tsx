@@ -19,6 +19,7 @@ export const TournamentScreen = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
+  const [sitovers, setSitovers] = useState<Player[]>([]);
 
   const [playerScores, setPlayerScores] = useState<Player[]>(
     players.map((player) => ({
@@ -57,23 +58,58 @@ export const TournamentScreen = () => {
   ) => {
     setPlayerScores((prevScores) =>
       prevScores.map((player) => {
+        let updatedPlayer = { ...player };
+
+        // If points are already finalized for this player, don't update
+        if (updatedPlayer.isRoundFinalized) {
+          return updatedPlayer;
+        }
+
         // Update current round score for the specific team
         if (team.some((teammate) => teammate.id === player.id)) {
-          return {
-            ...player,
+          const result =
+            newPoints > 16 ? "Win" : newPoints === 16 ? "Tie" : "Lose";
+
+          // Increment stats based on the result
+          if (result === "Win") {
+            updatedPlayer.wins += 1;
+          } else if (result === "Tie") {
+            updatedPlayer.draws += 1;
+          } else if (result === "Lose") {
+            updatedPlayer.losses += 1;
+          }
+
+          updatedPlayer = {
+            ...updatedPlayer,
             currentRoundScore: newPoints,
             roundPoints: newPoints,
+            isRoundFinalized: false, // Allow points to change until "Next Round"
           };
         }
         // Update opponent team's score
         else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-          return {
-            ...player,
-            currentRoundScore: 32 - newPoints,
-            roundPoints: 32 - newPoints,
+          const opponentScore = 32 - newPoints;
+          const result =
+            opponentScore > 16 ? "Win" : opponentScore === 16 ? "Tie" : "Lose";
+
+          // Increment stats based on the result
+          if (result === "Win") {
+            updatedPlayer.wins += 1;
+          } else if (result === "Tie") {
+            updatedPlayer.draws += 1;
+          } else if (result === "Lose") {
+            updatedPlayer.losses += 1;
+          }
+
+          updatedPlayer = {
+            ...updatedPlayer,
+            currentRoundScore: opponentScore,
+            roundPoints: opponentScore,
+            isRoundFinalized: false, // Allow points to change until "Next Round"
           };
         }
-        return player;
+
+        return updatedPlayer;
       })
     );
     closeDialog();
@@ -92,59 +128,29 @@ export const TournamentScreen = () => {
 
   const handleNextRound = () => {
     if (allMatchesHaveScores()) {
-      // Award 16 points to remaining players
+      // Award 16 points to remaining players who haven't received points yet
       const updatedScoresWithRemainingPlayers = playerScores.map((player) => {
         if (remainingPlayers.some((p) => p.id === player.id)) {
-          return {
-            ...player,
-            roundPoints: 16, // Add 16 points for sitting out
-            points: player.points + 16, // Update total points
-          };
+          // Assign 16 points only if they haven't received it yet
+          if (player.roundPoints === 0) {
+            return {
+              ...player,
+              roundPoints: 0, // Assign 16 points for sitting out
+              points: player.points + 16, // Update total points
+            };
+          }
         }
         return player;
       });
 
       // Update player stats based on round performance
       const updatedScores = updatedScoresWithRemainingPlayers.map((player) => {
-        const matchingMatch = matches.find((match) =>
-          match.some((matchPlayer) => matchPlayer.id === player.id)
-        );
-
-        if (matchingMatch) {
-          const playerInMatch = matchingMatch.find((p) => p.id === player.id);
-          const opponentTeamInMatch = matchingMatch.filter(
-            (p) => p.id !== player.id
-          );
-
-          const playerRoundScore = playerInMatch?.roundPoints || 0;
-          const opponentTeamScore = opponentTeamInMatch.reduce(
-            (sum, p) => sum + (p.roundPoints || 0),
-            0
-          );
-
-          let wins = player.wins;
-          let losses = player.losses;
-          let draws = player.draws;
-
-          if (playerRoundScore > opponentTeamScore) {
-            wins += 1;
-          } else if (playerRoundScore < opponentTeamScore) {
-            losses += 1;
-          } else {
-            draws += 1;
-          }
-
-          return {
-            ...player,
-            points: player.points + player.roundPoints, // Add round points to total points
-            roundPoints: 0, // Reset round points
-            currentRoundScore: 0, // Reset current round score
-            wins,
-            losses,
-            draws,
-          };
-        }
-        return player;
+        return {
+          ...player,
+          points: player.points + player.roundPoints, // Add round points to total points
+          roundPoints: 0, // Reset round points after finalizing
+          currentRoundScore: 0, // Reset current round score
+        };
       });
 
       // Sort players by total points in descending order
@@ -240,7 +246,7 @@ export const TournamentScreen = () => {
 
             <div className="flex justify-between px-6">
               <ArrowLeftIcon
-                  className={`h-8 w-8 ${
+                className={`h-8 w-8 ${
                   currentRound > 1
                     ? "cursor-pointer"
                     : "text-black cursor-not-allowed"

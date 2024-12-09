@@ -7,6 +7,7 @@ export interface Player {
     wins: number;
     losses: number;
     draws: number;
+    isRoundFinalized: boolean;
 }
 
 export interface Team {
