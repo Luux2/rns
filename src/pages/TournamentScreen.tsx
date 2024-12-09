@@ -222,6 +222,7 @@ export const TournamentScreen = () => {
       // Update players and increment round
       setPlayerScores(updatedPlayerScores);
       setCurrentRound((prevRound) => prevRound + 1);
+      resetPoints();
     }
   };
 
