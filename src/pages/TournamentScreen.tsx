@@ -40,6 +40,13 @@ export const TournamentScreen = () => {
   }, []);
 
   useEffect(() => {
+    if (playerScores.length > 0 && playerScores.length % 4 !== 0) {
+      const remainingPlayers = playerScores.slice(-(playerScores.length % 4));
+      setSitovers(remainingPlayers);
+    }
+  }, [playerScores]);
+
+  useEffect(() => {
     savePlayersToLocalStorage(playerScores);
   }, [playerScores]);
 
@@ -128,6 +135,24 @@ export const TournamentScreen = () => {
 
   const handleNextRound = () => {
     if (allMatchesHaveScores()) {
+      // Add 16 points to sitover players
+      for (const sitover of sitovers) {
+        setPlayerScores((prevScores) =>
+          prevScores.map((player) => {
+            if (player.id === sitover.id) {
+              return {
+                ...player,
+                roundPoints: 16,
+                isRoundFinalized: true,
+              };
+            }
+            return player;
+          })
+        );
+      }
+      // Reset the sitover list at the start of each new round
+      setSitovers([]);
+
       // Award 16 points to remaining players who haven't received points yet
       const updatedScoresWithRemainingPlayers = playerScores.map((player) => {
         if (remainingPlayers.some((p) => p.id === player.id)) {
@@ -153,15 +178,33 @@ export const TournamentScreen = () => {
         };
       });
 
+      // Shuffle players randomly
+      const shuffledPlayers = [...updatedScores].sort(
+        () => 0.5 - Math.random()
+      );
+
+      // Select the correct ammount calculated by taking n % 4 = x chose x players to sitover
+      const sitoutPlayers = shuffledPlayers.slice(
+        0,
+        shuffledPlayers.length % 4
+      );
+      setSitovers(sitoutPlayers);
+
       // Sort players by total points in descending order
       const sortedPlayers = [...updatedScores].sort(
         (a, b) => b.points - a.points
       );
 
+      // Remove sitout players from the list of players who are playing
+      const updatedPlayers = sortedPlayers.filter(
+        (player) => !sitoutPlayers.some((sitout) => sitout.id === player.id)
+      );
+
       // Create new matches: pair 1 & 3, 2 & 4, etc.
       const newMatches: Player[][] = [];
-      for (let i = 0; i < sortedPlayers.length; i += 4) {
-        const matchPlayers = sortedPlayers.slice(i, i + 4);
+      for (let i = 0; i < updatedPlayers.length; i += 4) {
+        const matchPlayers = updatedPlayers.slice(i, i + 4);
+
         if (matchPlayers.length === 4) {
           // Pair the players by their ranking (1st & 3rd, 2nd & 4th)
           newMatches.push([
@@ -173,8 +216,11 @@ export const TournamentScreen = () => {
         }
       }
 
+      // Add sitovers to the list again
+      const updatedPlayerScores = updatedPlayers.concat(sitoutPlayers);
+
       // Update players and increment round
-      setPlayerScores(sortedPlayers);
+      setPlayerScores(updatedPlayerScores);
       setCurrentRound((prevRound) => prevRound + 1);
     }
   };
@@ -224,7 +270,10 @@ export const TournamentScreen = () => {
     closeDialog();
   };
 
-  const remainingPlayers = playerScores.slice(matches.length * 4);
+  // Sitovers saved in variable remainingPlayers
+  const remainingPlayers = playerScores.filter((player) =>
+    sitovers.some((sitover) => sitover.id === player.id)
+  );
 
   return (
     <>
