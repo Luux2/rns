@@ -33,16 +33,14 @@ const Leaderboard = () => {
                              } `}
           >
             <div>
-              <h3 className="text-black rounded truncate pl-1">
+              <h3 className="col-span-1 text-black rounded truncate pl-1">
                 {index + 1}. {player.name}
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-9">
               <h3 className="text-black text-center">
                 {player.wins}-{player.draws}-{player.losses}
               </h3>
               <h3 className="text-black text-center">{player.points}</h3>
-            </div>
           </div>
         ))}
       </div>
