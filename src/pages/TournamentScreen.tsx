@@ -226,18 +226,21 @@ export const TournamentScreen = () => {
         <Header />
         <div className="grid grid-cols-[75%_25%]">
           <div className="col-span-1">
-            <div className="mt-4 mb-3 mx-5 px-4 border rounded-lg border-gray-500 flex justify-between">
-              <h1 className="text-lg font-semibold">
-                🔝 Venstre par server først
+            <div className="mt-4 mb-3 mx-5 px-2 py-0.5 border rounded-lg border-gray-500 flex justify-between">
+              <h1 className="font-semibold">
+                🔝 Venstre par server først og tager boldene
               </h1>
-              <h1 className="text-center text-lg font-semibold">
+              <h1 className="text-center font-semibold">
                 ☕️ Altid gratis kaffe
+              </h1>
+              <h1 className="font-semibold">
+                ♻️ Husk at aflevere boldene tilbage
               </h1>
             </div>
 
             <div className="flex justify-between px-6">
               <ArrowLeftIcon
-                className={`h-8 w-8 ${
+                  className={`h-8 w-8 ${
                   currentRound > 1
                     ? "cursor-pointer"
                     : "text-black cursor-not-allowed"
