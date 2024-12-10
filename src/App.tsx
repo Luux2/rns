@@ -8,7 +8,7 @@ function App() {
 
   return (
       <HelmetProvider>
-        <BrowserRouter>
+        <BrowserRouter basename="/rns/">
             <Routes>
                 <Route index path="/" element={<IndexScreen/>}/>
                 <Route path="/turnering" element={<TournamentScreen/>}/>
