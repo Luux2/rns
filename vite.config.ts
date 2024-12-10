@@ -32,4 +32,10 @@ export default defineConfig({
     }),
   ],
   base: '/rns/',
+  build: {
+    assetsDir: 'assets',
+    rollupOptions: {
+        input: './index.html',
+    }
+  }
 });
