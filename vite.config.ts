@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import react from '@vitejs/plugin-react-swc';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  base: '/rns/',
   plugins: [
     react(),
     VitePWA({
@@ -31,5 +32,4 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/rns/',
 });
