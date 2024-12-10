@@ -15,7 +15,7 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#000000',
-        scope: '/rns/',
+        scope: '/',
         icons: [
           {
             src: 'rns192.png',
@@ -31,7 +31,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/rns/',
+  base: '/',
   build: {
     assetsDir: 'assets',
     rollupOptions: {
