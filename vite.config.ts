@@ -16,7 +16,7 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#000000',
-        scope: '/',
+        scope: '/rns/',
         icons: [
           {
             src: 'rns192.png',
