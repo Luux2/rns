@@ -8,7 +8,6 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
       manifest: {
         name: "Rise 'n Shine",
         short_name: 'RNS',
