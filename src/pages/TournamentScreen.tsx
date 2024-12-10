@@ -334,15 +334,15 @@ export const TournamentScreen = () => {
         <Header />
         <div className="grid grid-cols-[75%_25%]">
           <div className="col-span-1">
-            <div className="mt-4 mb-3 mx-5 px-2 py-0.5 border rounded-lg border-gray-500 flex justify-between">
+            <div className="mt-4 mb-3 mx-1 px-2 py-0.5 border rounded-lg border-gray-500 flex justify-between">
               <h1 className="font-semibold">
-                🔝 Venstre par server først og tager boldene
+                🔝 Venstre par server først
               </h1>
               <h1 className="text-center font-semibold">
                 ☕️ Altid gratis kaffe
               </h1>
               <h1 className="font-semibold">
-                ♻️ Husk at aflevere boldene tilbage
+                ♻️ Husk bolde - begge veje
               </h1>
             </div>
 
