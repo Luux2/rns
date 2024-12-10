@@ -32,6 +32,32 @@ export const TournamentScreen = () => {
     localStorage.setItem("players", JSON.stringify(players));
   };
 
+  const [courtNumbers, setCourtNumbers] = useState<string[]>([
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "2",
+    "3",
+    "4",
+    "7",
+  ]);
+
+  const handleCourtNumberChange = (index: number, newNumber: string) => {
+    const updatedCourtNumbers = [...courtNumbers];
+    updatedCourtNumbers[index] = newNumber;
+    setCourtNumbers(updatedCourtNumbers);
+    localStorage.setItem("courtNumbers", JSON.stringify(updatedCourtNumbers));
+  };
+
+  useEffect(() => {
+    const storedCourtNumbers = localStorage.getItem("courtNumbers");
+    if (storedCourtNumbers) {
+      setCourtNumbers(JSON.parse(storedCourtNumbers));
+    }
+  }, []);
+
   useEffect(() => {
     const storedPlayers = localStorage.getItem("players");
     if (storedPlayers) {
@@ -238,9 +264,6 @@ export const TournamentScreen = () => {
 
   const handleExit = () => navigate("/");
 
-  // Banenumre
-  const courtNumber = ["8", "9", "10", "11", "12", "2", "3", "4", "7"];
-
   const openDialog = (team: Player[], opponentTeam: Player[]) => {
     setCurrentTeam(team);
     setOpponentTeam(opponentTeam);
@@ -324,7 +347,19 @@ export const TournamentScreen = () => {
                 >
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
                     <h2 className="text-sm font-bold text-black">
-                      Bane {courtNumber[index % courtNumber.length]}
+                      <input
+                        type="text"
+                        value={
+                          "Bane " + courtNumbers[index % courtNumbers.length]
+                        }
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          handleCourtNumberChange(
+                            index % courtNumbers.length,
+                            e.target.value
+                          )
+                        }
+                        className="text-sm font-bold text-black text-center bg-transparent border-none focus:outline-none w-20"
+                      />
                     </h2>
                   </div>
 
