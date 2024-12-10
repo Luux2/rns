@@ -31,11 +31,4 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/',
-  build: {
-    assetsDir: 'assets',
-    rollupOptions: {
-        input: './index.html',
-    }
-  }
 });
