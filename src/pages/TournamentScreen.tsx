@@ -84,6 +84,10 @@ export const TournamentScreen = () => {
     }
   }
 
+  const [roundScores, setRoundScores] = useState<{
+    [round: number]: { [playerId: number]: number };
+  }>({});
+
   const updateTeamPoints = (
     team: Player[],
     opponentTeam: Player[],
@@ -145,6 +149,23 @@ export const TournamentScreen = () => {
         return updatedPlayer;
       })
     );
+
+    // Save the points for the current round
+    setRoundScores((prevRoundScores) => ({
+      ...prevRoundScores,
+      [currentRound]: {
+        ...prevRoundScores[currentRound],
+        ...team.reduce((acc, player) => {
+          acc[player.id] = newPoints;
+          return acc;
+        }, {} as { [playerId: number]: number }),
+        ...opponentTeam.reduce((acc, player) => {
+          acc[player.id] = 32 - newPoints;
+          return acc;
+        }, {} as { [playerId: number]: number }),
+      },
+    }));
+
     closeDialog();
   };
 
@@ -258,7 +279,15 @@ export const TournamentScreen = () => {
 
   const handlePreviousRound = () => {
     if (currentRound > 1) {
-      setCurrentRound(currentRound - 1);
+      setCurrentRound((prevRound) => prevRound - 1);
+      // Restore the points for the previous round
+      setPlayerScores((prevScores) =>
+        prevScores.map((player) => ({
+          ...player,
+          roundPoints: roundScores[currentRound - 1]?.[player.id] || 0,
+          currentRoundScore: roundScores[currentRound - 1]?.[player.id] || 0,
+        }))
+      );
     }
   };
 
@@ -414,7 +443,7 @@ export const TournamentScreen = () => {
           </div>
 
           {/* Right Column */}
-          <div className="col-span-1">
+          <div className="leaderboard-container h-[calc(100vh-325px)] overflow-y-auto mr-2">
             <Leaderboard />
           </div>
         </div>
