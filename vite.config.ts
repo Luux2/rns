@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: '/rns/',
+  base: '/',
   plugins: [
     react(),
     VitePWA({
@@ -16,7 +16,7 @@ export default defineConfig({
         display: 'standalone',
         background_color: '#ffffff',
         theme_color: '#000000',
-        scope: '/rns/',
+        scope: '/',
         icons: [
           {
             src: 'rns192.png',
