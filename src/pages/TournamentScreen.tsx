@@ -33,22 +33,26 @@ export const TournamentScreen = () => {
   };
 
   const [courtNumbers, setCourtNumbers] = useState<string[]>([
-    "8",
-    "9",
-    "10",
-    "11",
-    "12",
-    "2",
-    "3",
-    "4",
-    "7",
+    "Bane 8",
+    "Bane 9",
+    "Bane 10",
+    "Bane 11",
+    "Bane 12",
+    "Bane 2",
+    "Bane 3",
+    "Bane 4",
+    "Bane 7",
   ]);
 
-  const handleCourtNumberChange = (index: number, newNumber: string) => {
-    const updatedCourtNumbers = [...courtNumbers];
-    updatedCourtNumbers[index] = newNumber;
-    setCourtNumbers(updatedCourtNumbers);
-    localStorage.setItem("courtNumbers", JSON.stringify(updatedCourtNumbers));
+  const handleCourtNumberChange = (index: number, newValue: string) => {
+    setCourtNumbers((prev) => {
+      const updated = [...prev];
+      updated[index] = newValue; // Opdaterer værdien direkte
+      return updated;
+    });
+
+    // Persistér ændringen i localStorage
+    localStorage.setItem("courtNumbers", JSON.stringify(courtNumbers));
   };
 
   useEffect(() => {
@@ -368,7 +372,7 @@ export const TournamentScreen = () => {
               />
             </div>
 
-            <div className="mx-1 grid grid-cols-3 gap-x-1.5 gap-y-10 mt-4 top-4">
+            <div className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid ${matches.length <= 4 ? "grid-cols-1" : matches.length <= 8 ? "grid-cols-2" : "grid-cols-3"}`}>
               {matches.map((match, index) => (
                 <div
                   key={index}
@@ -377,16 +381,11 @@ export const TournamentScreen = () => {
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                       <input
                         type="text"
-                        value={
-                          "Bane " + courtNumbers[index % courtNumbers.length]
-                        }
+                        value={courtNumbers[index % courtNumbers.length]}
                         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                          handleCourtNumberChange(
-                            index % courtNumbers.length,
-                            e.target.value
-                          )
+                            handleCourtNumberChange(index % courtNumbers.length, e.target.value)
                         }
-                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none w-24"
+                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24"
                       />
                   </div>
 
@@ -429,7 +428,7 @@ export const TournamentScreen = () => {
                   <div>
                     {[1, 3].map((idx) =>
                       match[idx] ? (
-                        <div key={idx} className="text-black">
+                        <div key={idx} className="text-black text-right">
                           <h1 className="pl-2 truncate">{match[idx].name}</h1>
                         </div>
                       ) : null
@@ -484,7 +483,7 @@ export const TournamentScreen = () => {
       )}
 
       {remainingPlayers.length > 0 && (
-        <div className="animate-pulse fixed bottom-0 left-1/2 transform -translate-x-1/2 flex justify-center items-center py-4">
+        <div className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
           <h2 className="text-lg font-bold text-red-500">
             Sidder over (16 point):
           </h2>
@@ -494,7 +493,7 @@ export const TournamentScreen = () => {
         </div>
       )}
 
-      <div className="fixed bottom-0 left-0 p-4">
+      <div className="fixed bottom-0 left-0 p-2">
         <ArrowLeftStartOnRectangleIcon
           className="h-8 w-8 cursor-pointer"
           onClick={handleExit}
