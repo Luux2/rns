@@ -13,8 +13,8 @@ export default defineConfig({
         short_name: 'RNS',
         start_url: '/rns/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#000000',
+        background_color: '#111827',
+        theme_color: '#111827',
         scope: '/',
         icons: [
           {

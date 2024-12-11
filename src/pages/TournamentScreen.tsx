@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import { useState, useEffect } from "react";
+import {useState, useEffect, ChangeEvent} from "react";
 import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
@@ -334,7 +334,7 @@ export const TournamentScreen = () => {
         <Header />
         <div className="grid grid-cols-[75%_25%]">
           <div className="col-span-1">
-            <div className="mt-4 mb-3 mx-1 px-2 py-0.5 border rounded-lg border-gray-500 flex justify-between">
+            <div className="mt-4 mb-3 mx-1 px-2 py-0.5 border rounded border-gray-500 flex justify-between">
               <h1 className="font-semibold">
                 🔝 Venstre par server først
               </h1>
@@ -368,28 +368,26 @@ export const TournamentScreen = () => {
               />
             </div>
 
-            <div className="mx-5 grid grid-cols-3 gap-x-4 gap-y-10 mt-4 sticky top-4">
+            <div className="mx-1 grid grid-cols-3 gap-x-1.5 gap-y-10 mt-4 top-4">
               {matches.map((match, index) => (
                 <div
                   key={index}
-                  className="relative h-20 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-r from-sky-500 to-sky-200"
+                  className="relative h-20 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200"
                 >
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2 py-1 rounded-full shadow-md">
-                    <h2 className="text-sm font-bold text-black">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                       <input
                         type="text"
                         value={
                           "Bane " + courtNumbers[index % courtNumbers.length]
                         }
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
                           handleCourtNumberChange(
                             index % courtNumbers.length,
                             e.target.value
                           )
                         }
-                        className="text-sm font-bold text-black text-center bg-transparent border-none focus:outline-none w-20"
+                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none w-24"
                       />
-                    </h2>
                   </div>
 
                   <div>
@@ -402,9 +400,9 @@ export const TournamentScreen = () => {
                     )}
                   </div>
 
-                  <div className="flex justify-center items-center text-2xl text-black">
+                  <div className="flex justify-center items-center text-2xl">
                     <span
-                      className="cursor-pointer font-mono"
+                      className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
                       onClick={() =>
                         openDialog(
                           [match[0], match[2]].filter(Boolean),
@@ -414,9 +412,9 @@ export const TournamentScreen = () => {
                     >
                       {match[0]?.currentRoundScore ?? 0}
                     </span>
-                    <h1 className="font-mono mx-2">-</h1>
+                    <h1 className="font-mono mx-1">-</h1>
                     <span
-                      className="cursor-pointer font-mono"
+                      className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
                       onClick={() =>
                         openDialog(
                           [match[1], match[3]].filter(Boolean),
@@ -432,7 +430,7 @@ export const TournamentScreen = () => {
                     {[1, 3].map((idx) =>
                       match[idx] ? (
                         <div key={idx} className="text-black">
-                          <h1 className="truncate pl-3">{match[idx].name}</h1>
+                          <h1 className="pl-2 truncate">{match[idx].name}</h1>
                         </div>
                       ) : null
                     )}
@@ -443,7 +441,7 @@ export const TournamentScreen = () => {
           </div>
 
           {/* Right Column */}
-          <div className="leaderboard-container h-[calc(100vh-325px)] overflow-y-auto mr-2">
+          <div>
             <Leaderboard />
           </div>
         </div>
