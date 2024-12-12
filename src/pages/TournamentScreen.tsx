@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import {useState, useEffect, ChangeEvent} from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
@@ -88,9 +88,21 @@ export const TournamentScreen = () => {
     }
   }
 
+  const saveRoundScoresToLocalStorage = (roundScores: {
+    [round: number]: { [playerId: number]: number };
+  }) => {
+    localStorage.setItem("roundScores", JSON.stringify(roundScores));
+  };
+
+  const loadRoundScoresFromLocalStorage = () => {
+    const storedRoundScores = localStorage.getItem("roundScores");
+    return storedRoundScores ? JSON.parse(storedRoundScores) : {};
+  };
+
   const [roundScores, setRoundScores] = useState<{
     [round: number]: { [playerId: number]: number };
-  }>({});
+  }>(loadRoundScoresFromLocalStorage());
+  const [totalRounds, setTotalRounds] = useState<number>(1);
 
   const updateTeamPoints = (
     team: Player[],
@@ -155,10 +167,10 @@ export const TournamentScreen = () => {
     );
 
     // Save the points for the current round
-    setRoundScores((prevRoundScores) => ({
-      ...prevRoundScores,
+    const updatedRoundScores = {
+      ...roundScores,
       [currentRound]: {
-        ...prevRoundScores[currentRound],
+        ...roundScores[currentRound],
         ...team.reduce((acc, player) => {
           acc[player.id] = newPoints;
           return acc;
@@ -168,7 +180,10 @@ export const TournamentScreen = () => {
           return acc;
         }, {} as { [playerId: number]: number }),
       },
-    }));
+    };
+
+    setRoundScores(updatedRoundScores);
+    saveRoundScoresToLocalStorage(updatedRoundScores);
 
     closeDialog();
   };
@@ -186,6 +201,19 @@ export const TournamentScreen = () => {
 
   const handleNextRound = () => {
     if (allMatchesHaveScores()) {
+      if (currentRound < totalRounds) {
+        setCurrentRound((prevRound) => prevRound + 1);
+        // Restore the points for the next round
+        setPlayerScores((prevScores) =>
+          prevScores.map((player) => ({
+            ...player,
+            roundPoints: roundScores[currentRound + 1]?.[player.id] || 0,
+            currentRoundScore: roundScores[currentRound + 1]?.[player.id] || 0,
+          }))
+        );
+        return;
+      }
+
       // Add 16 points to sitover players
       for (const sitover of sitovers) {
         setPlayerScores((prevScores) =>
@@ -273,6 +301,7 @@ export const TournamentScreen = () => {
       // Update players and increment round
       setPlayerScores(updatedPlayerScores);
       setCurrentRound((prevRound) => prevRound + 1);
+      setTotalRounds((prevTotal) => prevTotal + 1);
       resetPoints();
     }
   };
@@ -379,14 +408,14 @@ export const TournamentScreen = () => {
                   className="relative h-20 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200"
                 >
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
-                      <input
-                        type="text"
-                        value={courtNumbers[index % courtNumbers.length]}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    <input
+                      type="text"
+                      value={courtNumbers[index % courtNumbers.length]}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
                             handleCourtNumberChange(index % courtNumbers.length, e.target.value)
-                        }
-                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24"
-                      />
+                      }
+                      className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24"
+                    />
                   </div>
 
                   <div>
