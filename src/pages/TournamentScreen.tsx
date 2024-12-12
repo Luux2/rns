@@ -380,7 +380,7 @@ export const TournamentScreen = () => {
             </div>
 
             <div className="flex justify-between px-6">
-              <ArrowLeftIcon
+              {/* <ArrowLeftIcon
                 className={`h-8 w-8 ${
                   currentRound > 1
                     ? "cursor-pointer"
@@ -388,7 +388,7 @@ export const TournamentScreen = () => {
                 }`}
                 onClick={handlePreviousRound}
                 aria-disabled={currentRound === 1}
-              />
+              /> */}
               <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
               <ArrowRightIcon
                 className={`h-8 w-8 ${
