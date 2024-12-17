@@ -47,6 +47,7 @@ export const TournamentScreen = () => {
     "Bane 3",
     "Bane 4",
     "Bane 7",
+    "Bane 15"
   ]);
 
   const handleCourtNumberChange = (index: number, newValue: string) => {
@@ -411,7 +412,7 @@ export const TournamentScreen = () => {
               {matches.map((match, index) => (
                 <div
                   key={index}
-                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${matches.length >= 9 && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
+                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${matches.length === 10 && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
                 >
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                     <input
