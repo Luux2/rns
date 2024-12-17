@@ -5,7 +5,6 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
-  ArrowLeftIcon,
   ArrowLeftStartOnRectangleIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
@@ -20,6 +19,11 @@ export const TournamentScreen = () => {
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
   const [sitovers, setSitovers] = useState<Player[]>([]);
+  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
+
+  useEffect(() => {
+    setIsStartDialogOpen(true);
+  }, []);
 
   const [playerScores, setPlayerScores] = useState<Player[]>(
     players.map((player) => ({
@@ -38,6 +42,7 @@ export const TournamentScreen = () => {
     "Bane 10",
     "Bane 11",
     "Bane 12",
+    "Bane 1",
     "Bane 2",
     "Bane 3",
     "Bane 4",
@@ -310,7 +315,7 @@ export const TournamentScreen = () => {
     setPlayers(playerScores);
   }, [playerScores, setPlayers]);
 
-  const handlePreviousRound = () => {
+  /*const handlePreviousRound = () => {
     if (currentRound > 1) {
       setCurrentRound((prevRound) => prevRound - 1);
       // Restore the points for the previous round
@@ -322,7 +327,7 @@ export const TournamentScreen = () => {
         }))
       );
     }
-  };
+  };*/
 
   const handleExit = () => navigate("/");
 
@@ -389,15 +394,16 @@ export const TournamentScreen = () => {
                 onClick={handlePreviousRound}
                 aria-disabled={currentRound === 1}
               /> */}
+              <div className="h-8 w-8"></div>
               <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
               <ArrowRightIcon
-                className={`h-8 w-8 ${
-                  allMatchesHaveScores()
-                    ? "cursor-pointer"
-                    : "text-black cursor-not-allowed"
-                }`}
-                onClick={allMatchesHaveScores() ? handleNextRound : undefined}
-                aria-disabled={!allMatchesHaveScores()}
+                  className={`h-8 w-8 ${
+                      allMatchesHaveScores()
+                          ? "cursor-pointer"
+                          : "text-black cursor-not-allowed"
+                  }`}
+                  onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                  aria-disabled={!allMatchesHaveScores()}
               />
             </div>
 
@@ -405,7 +411,7 @@ export const TournamentScreen = () => {
               {matches.map((match, index) => (
                 <div
                   key={index}
-                  className="relative h-20 py-4 px-1 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200"
+                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${matches.length >= 9 && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
                 >
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                     <input
@@ -475,60 +481,88 @@ export const TournamentScreen = () => {
         </div>
       </Animation>
 
-      {isDialogOpen && currentTeam.length > 0 && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white text-black p-4 rounded-lg shadow-lg">
-            <h2 className="text-lg font-bold mb-4">
-              Vælg point for hold:{" "}
-              {currentTeam.map((player) => player.name).join(" & ")}
-            </h2>
-            <div className="grid grid-cols-11 gap-2">
-              {Array.from({ length: 33 }, (_, i) => (
-                <button
-                  key={i}
-                  className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
-                  onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
-                >
-                  {i}
+      {isStartDialogOpen && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div className="bg-white text-black p-4 rounded-lg shadow-lg">
+              <h2 className="text-3xl font-bold mb-4">Velkommen til Rise 'n Shine ☀️</h2>
+              <p className="mb-4 font-semibold text-2xl">Mexicano-format - kampgenerering baseret på placering i
+                stillingen</p>
+              <p className="mb-4 font-semibold text-2xl">Bedst á 32 point pr. kamp</p>
+              <p className="mb-4 font-semibold text-2xl">2x4 server pr. spiller</p>
+              <p className="mb-4 font-semibold text-2xl">Parret til venstre starter med serven</p>
+              <p className="mb-4 font-semibold text-2xl">Brug endelig de første 5 minutter på at varme op</p>
+              <p className="mb-4 font-semibold text-2xl">Parret til venstre tager bolde med ud til banerne - smid ikke
+                rørene ud!</p>
+              <p className="mb-4 font-semibold text-2xl">Efter sidste runde bedes I tage boldene med tilbage - gerne med
+                rør</p>
+              <p className="mb-4 font-semibold text-2xl">Hvis ikke der er mere kaffe er det Jens' skyld</p>
+              <p className="mb-4 font-semibold text-2xl">Hvis appen ikke virker er det nok også Jens' skyld</p>
+              <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
+              <div className="flex justify-end">
+                <button className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
+                        onClick={() => setIsStartDialogOpen(false)}>
+                  Vamos!
                 </button>
-              ))}
-            </div>
-            <div className="flex justify-between">
-              <button
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                onClick={closeDialog}
-              >
-                Annuller
-              </button>
-              <button
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                onClick={resetPoints}
-              >
-                Nulstil
-              </button>
+              </div>
             </div>
           </div>
-        </div>
       )}
 
-      {remainingPlayers.length > 0 && (
-        <div className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
-          <h2 className="text-lg font-bold text-red-500">
-            Sidder over (16 point):
-          </h2>
-          <p className="text-xl ml-2">
-            {remainingPlayers.map((player) => player.name).join(", ")}
-          </p>
-        </div>
-      )}
+      {isDialogOpen && currentTeam.length > 0 && (
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+                      <div className="bg-white text-black p-4 rounded-lg shadow-lg">
+                        <h2 className="text-lg font-bold mb-4">
+                          Vælg point for hold:{" "}
+                          {currentTeam.map((player) => player.name).join(" & ")}
+                        </h2>
+                        <div className="grid grid-cols-11 gap-2">
+                          {Array.from({length: 33}, (_, i) => (
+                              <button
+                                  key={i}
+                                  className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
+                                  onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
+                              >
+                                {i}
+                              </button>
+                          ))}
+                        </div>
+                        <div className="flex justify-between">
+                          <button
+                              className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                              onClick={closeDialog}
+                          >
+                            Annuller
+                          </button>
+                          <button
+                              className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                              onClick={resetPoints}
+                          >
+                            Nulstil
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                )}
 
-      <div className="fixed bottom-0 left-0 p-2">
-        <ArrowLeftStartOnRectangleIcon
-          className="h-8 w-8 cursor-pointer"
-          onClick={handleExit}
-        />
-      </div>
-    </>
-  );
-};
-export default TournamentScreen;
+                {remainingPlayers.length > 0 && (
+                    <div
+                        className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
+                      <h2 className="text-lg font-bold text-red-500">
+                        Sidder over (16 point):
+                      </h2>
+                      <p className="text-xl ml-2">
+                        {remainingPlayers.map((player) => player.name).join(", ")}
+                      </p>
+                    </div>
+                )}
+
+                <div className="fixed top-0 left-0 p-2">
+                  <ArrowLeftStartOnRectangleIcon
+                      className="h-8 w-8 cursor-pointer"
+                      onClick={handleExit}
+                  />
+                </div>
+              </>
+              );
+              };
+              export default TournamentScreen;
