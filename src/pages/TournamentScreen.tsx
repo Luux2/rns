@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
 import { useState, useEffect, ChangeEvent } from "react";
@@ -373,7 +372,7 @@ export const TournamentScreen = () => {
         <Header />
         <div className="grid grid-cols-[75%_25%]">
           <div className="col-span-1">
-            <div className="mt-4 mb-3 mx-1 px-2 py-0.5 border rounded border-gray-500 flex justify-between">
+            <div className="mb-3 mx-1 px-2 py-0.5 border rounded border-gray-500 flex justify-between">
               <h1 className="font-semibold">
                 🔝 Venstre par server først
               </h1>
