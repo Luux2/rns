@@ -1,6 +1,6 @@
 import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
@@ -35,7 +35,7 @@ export const TournamentScreen = () => {
     localStorage.setItem("players", JSON.stringify(players));
   };
 
-  const [courtNumbers, setCourtNumbers] = useState<string[]>([
+  const [courtNumbers] = useState<string[]>([
     "Bane 8",
     "Bane 9",
     "Bane 10",
@@ -49,23 +49,6 @@ export const TournamentScreen = () => {
     "Bane 15"
   ]);
 
-  const handleCourtNumberChange = (index: number, newValue: string) => {
-    setCourtNumbers((prev) => {
-      const updated = [...prev];
-      updated[index] = newValue; // Opdaterer værdien direkte
-      return updated;
-    });
-
-    // Persistér ændringen i localStorage
-    localStorage.setItem("courtNumbers", JSON.stringify(courtNumbers));
-  };
-
-  useEffect(() => {
-    const storedCourtNumbers = localStorage.getItem("courtNumbers");
-    if (storedCourtNumbers) {
-      setCourtNumbers(JSON.parse(storedCourtNumbers));
-    }
-  }, []);
 
   useEffect(() => {
     const storedPlayers = localStorage.getItem("players");
@@ -411,26 +394,25 @@ export const TournamentScreen = () => {
               {matches.map((match, index) => (
                 <div
                   key={index}
-                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${matches.length === 10 && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
+                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
                 >
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
-                    <input
-                      type="text"
-                      value={courtNumbers[index % courtNumbers.length]}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                            handleCourtNumberChange(index % courtNumbers.length, e.target.value)
-                      }
-                      className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24"
-                    />
+                  <div
+                      className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
+                    <div
+                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
+                      {matches.length < 9
+                          ? courtNumbers.filter((court) => court !== "Bane 1")[index % (courtNumbers.length - 1)]
+                          : courtNumbers[index % courtNumbers.length]}
+                    </div>
                   </div>
 
                   <div>
                     {[0, 2].map((idx) =>
-                      match[idx] ? (
-                        <div key={idx} className="text-black">
-                          <h1 className="truncate pr-3">{match[idx].name}</h1>
-                        </div>
-                      ) : null
+                        match[idx] ? (
+                            <div key={idx} className="text-black">
+                              <h1 className="truncate pr-3">{match[idx].name}</h1>
+                            </div>
+                        ) : null
                     )}
                   </div>
 
