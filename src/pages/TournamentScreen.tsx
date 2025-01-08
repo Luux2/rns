@@ -108,18 +108,6 @@ export const TournamentScreen = () => {
 
         // Update current round score for the specific team
         if (team.some((teammate) => teammate.id === player.id)) {
-          const result =
-            newPoints > 16 ? "Win" : newPoints === 16 ? "Tie" : "Lose";
-
-          // Increment stats based on the result
-          if (result === "Win") {
-            updatedPlayer.wins += 1;
-          } else if (result === "Tie") {
-            updatedPlayer.draws += 1;
-          } else if (result === "Lose") {
-            updatedPlayer.losses += 1;
-          }
-
           updatedPlayer = {
             ...updatedPlayer,
             currentRoundScore: newPoints,
@@ -130,18 +118,6 @@ export const TournamentScreen = () => {
         // Update opponent team's score
         else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
           const opponentScore = 32 - newPoints;
-          const result =
-            opponentScore > 16 ? "Win" : opponentScore === 16 ? "Tie" : "Lose";
-
-          // Increment stats based on the result
-          if (result === "Win") {
-            updatedPlayer.wins += 1;
-          } else if (result === "Tie") {
-            updatedPlayer.draws += 1;
-          } else if (result === "Lose") {
-            updatedPlayer.losses += 1;
-          }
-
           updatedPlayer = {
             ...updatedPlayer,
             currentRoundScore: opponentScore,
@@ -237,12 +213,23 @@ export const TournamentScreen = () => {
 
       // Update player stats based on round performance
       const updatedScores = updatedScoresWithRemainingPlayers.map((player) => {
-        return {
+        const updatedPlayer = {
           ...player,
           points: player.points + player.roundPoints, // Add round points to total points
           roundPoints: 0, // Reset round points after finalizing
           currentRoundScore: 0, // Reset current round score
         };
+
+        // Determine win, tie, or loss based on roundPoints
+        if (player.roundPoints > 16) {
+          updatedPlayer.wins += 1;
+        } else if (player.roundPoints === 16) {
+          updatedPlayer.draws += 1;
+        } else if (player.roundPoints > 0) {
+          updatedPlayer.losses += 1;
+        }
+
+        return updatedPlayer;
       });
 
       // Shuffle players randomly
@@ -380,13 +367,13 @@ export const TournamentScreen = () => {
               <div className="h-8 w-8"></div>
               <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
               <ArrowRightIcon
-                  className={`h-8 w-8 ${
-                      allMatchesHaveScores()
-                          ? "cursor-pointer"
-                          : "text-black cursor-not-allowed"
-                  }`}
-                  onClick={allMatchesHaveScores() ? handleNextRound : undefined}
-                  aria-disabled={!allMatchesHaveScores()}
+                className={`h-8 w-8 ${
+                  allMatchesHaveScores()
+                    ? "cursor-pointer"
+                    : "text-black cursor-not-allowed"
+                }`}
+                onClick={allMatchesHaveScores() ? handleNextRound : undefined}
+                aria-disabled={!allMatchesHaveScores()}
               />
             </div>
 
@@ -402,17 +389,17 @@ export const TournamentScreen = () => {
                         className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
                       {matches.length < 9
                           ? courtNumbers.filter((court) => court !== "Bane 1")[index % (courtNumbers.length - 1)]
-                          : courtNumbers[index % courtNumbers.length]}
+                        : courtNumbers[index % courtNumbers.length]}
                     </div>
                   </div>
 
                   <div>
                     {[0, 2].map((idx) =>
-                        match[idx] ? (
-                            <div key={idx} className="text-black">
-                              <h1 className="truncate pr-3">{match[idx].name}</h1>
-                            </div>
-                        ) : null
+                      match[idx] ? (
+                        <div key={idx} className="text-black">
+                          <h1 className="truncate pr-3">{match[idx].name}</h1>
+                        </div>
+                      ) : null
                     )}
                   </div>
 
@@ -464,8 +451,8 @@ export const TournamentScreen = () => {
       </Animation>
 
       {isStartDialogOpen && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-            <div className="bg-white text-black p-4 rounded-lg shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white text-black p-4 rounded-lg shadow-lg">
               <h2 className="text-3xl font-bold mb-4">Velkommen til Rise 'n Shine ☀️</h2>
               <p className="mb-4 font-semibold text-2xl">Mexicano-format - kampgenerering baseret på placering i
                 stillingen</p>
@@ -479,72 +466,72 @@ export const TournamentScreen = () => {
                 rør</p>
               <p className="mb-4 font-semibold text-2xl">Hvis ikke der er mere kaffe er det Jens' skyld</p>
               <p className="mb-4 font-semibold text-2xl">Hvis appen ikke virker er det nok også Jens' skyld</p>
-              <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
-              <div className="flex justify-end">
+            <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
+            <div className="flex justify-end">
                 <button className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
                         onClick={() => setIsStartDialogOpen(false)}>
-                  Vamos!
-                </button>
-              </div>
+                Vamos!
+              </button>
             </div>
           </div>
+        </div>
       )}
 
       {isDialogOpen && currentTeam.length > 0 && (
-          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-                      <div className="bg-white text-black p-4 rounded-lg shadow-lg">
-                        <h2 className="text-lg font-bold mb-4">
-                          Vælg point for hold:{" "}
-                          {currentTeam.map((player) => player.name).join(" & ")}
-                        </h2>
-                        <div className="grid grid-cols-11 gap-2">
-                          {Array.from({length: 33}, (_, i) => (
-                              <button
-                                  key={i}
-                                  className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
-                                  onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
-                              >
-                                {i}
-                              </button>
-                          ))}
-                        </div>
-                        <div className="flex justify-between">
-                          <button
-                              className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                              onClick={closeDialog}
-                          >
-                            Annuller
-                          </button>
-                          <button
-                              className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                              onClick={resetPoints}
-                          >
-                            Nulstil
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                )}
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+          <div className="bg-white text-black p-4 rounded-lg shadow-lg">
+            <h2 className="text-lg font-bold mb-4">
+              Vælg point for hold:{" "}
+              {currentTeam.map((player) => player.name).join(" & ")}
+            </h2>
+            <div className="grid grid-cols-11 gap-2">
+              {Array.from({ length: 33 }, (_, i) => (
+                <button
+                  key={i}
+                  className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
+                  onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
+                >
+                  {i}
+                </button>
+              ))}
+            </div>
+            <div className="flex justify-between">
+              <button
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                onClick={closeDialog}
+              >
+                Annuller
+              </button>
+              <button
+                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
+                onClick={resetPoints}
+              >
+                Nulstil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-                {remainingPlayers.length > 0 && (
+      {remainingPlayers.length > 0 && (
                     <div
                         className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
-                      <h2 className="text-lg font-bold text-red-500">
-                        Sidder over (16 point):
-                      </h2>
-                      <p className="text-xl ml-2">
-                        {remainingPlayers.map((player) => player.name).join(", ")}
-                      </p>
-                    </div>
-                )}
+          <h2 className="text-lg font-bold text-red-500">
+            Sidder over (16 point):
+          </h2>
+          <p className="text-xl ml-2">
+            {remainingPlayers.map((player) => player.name).join(", ")}
+          </p>
+        </div>
+      )}
 
-                <div className="fixed top-0 left-0 p-2">
-                  <ArrowLeftStartOnRectangleIcon
-                      className="h-8 w-8 cursor-pointer"
-                      onClick={handleExit}
-                  />
-                </div>
-              </>
-              );
-              };
-              export default TournamentScreen;
+      <div className="fixed top-0 left-0 p-2">
+        <ArrowLeftStartOnRectangleIcon
+          className="h-8 w-8 cursor-pointer"
+          onClick={handleExit}
+        />
+      </div>
+    </>
+  );
+};
+export default TournamentScreen;
