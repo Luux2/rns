@@ -9,6 +9,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
+import {AnimatePresence, motion} from "framer-motion";
+import gif from "../../public/fire.gif";
 
 export const TournamentScreen = () => {
   const navigate = useNavigate();
@@ -336,6 +338,21 @@ export const TournamentScreen = () => {
     sitovers.some((sitover) => sitover.id === player.id)
   );
 
+  const playerVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 10 },
+  };
+
+
+  const matchVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: { opacity: 1, scale: 1 },
+    exit: { opacity: 0, scale: 0.95 },
+  };
+
+  const transitionSettings = { duration: 0.8, ease: "easeInOut" };
+
   return (
     <>
       <Animation>
@@ -365,11 +382,11 @@ export const TournamentScreen = () => {
                 aria-disabled={currentRound === 1}
               /> */}
               <div className="h-8 w-8"></div>
-              <h1 className="text-2xl font-bold mb-3">Runde {currentRound}</h1>
+              <h1 className="text-2xl font-bold mb-3 animate-pulse">Runde {currentRound}</h1>
               <ArrowRightIcon
                 className={`h-8 w-8 ${
                   allMatchesHaveScores()
-                    ? "cursor-pointer"
+                    ? "cursor-pointer animate-bounce"
                     : "text-black cursor-not-allowed"
                 }`}
                 onClick={allMatchesHaveScores() ? handleNextRound : undefined}
@@ -378,68 +395,98 @@ export const TournamentScreen = () => {
             </div>
 
             <div className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid ${matches.length <= 4 ? "grid-cols-1" : matches.length <= 8 ? "grid-cols-2" : "grid-cols-3"}`}>
-              {matches.map((match, index) => (
-                <div
-                  key={index}
-                  className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-l from-sky-500 to-sky-200 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : " py-4 px-1"}`}
-                >
-                  <div
-                      className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
-                    <div
-                        className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
-                      {matches.length < 9
-                          ? courtNumbers.filter((court) => court !== "Bane 1")[index % (courtNumbers.length - 1)]
-                        : courtNumbers[index % courtNumbers.length]}
-                    </div>
-                  </div>
+              <AnimatePresence mode="wait">
+                {matches.map((match, index) => {
+                  // Tjek om et af holdene har en score på 27 eller mere
+                  const team1Score = match[0]?.currentRoundScore ?? 0;
+                  const team2Score = match[1]?.currentRoundScore ?? 0;
+                  const isHighScore = team1Score >= 24 || team2Score >= 24;
 
-                  <div>
-                    {[0, 2].map((idx) =>
-                      match[idx] ? (
-                        <div key={idx} className="text-black">
-                          <h1 className="truncate pr-3">{match[idx].name}</h1>
+                  return (
+                      <motion.div
+                          key={index}
+                          className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-orange-500 via-yellow-300 to-sky-300 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 px-1"}`}
+                          variants={matchVariants}
+                          style={isHighScore ? { backgroundImage: `url(${gif})`, backgroundSize: "cover", backgroundPosition: "center"} : {}}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          transition={transitionSettings}
+                      >
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
+                          <div className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
+                            {matches.length < 9
+                                ? courtNumbers.filter((court) => court !== "Bane 1")[index % (courtNumbers.length - 1)]
+                                : courtNumbers[index % courtNumbers.length]}
+                          </div>
                         </div>
-                      ) : null
-                    )}
-                  </div>
 
-                  <div className="flex justify-center items-center text-2xl">
-                    <span
-                      className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
-                      onClick={() =>
-                        openDialog(
-                          [match[0], match[2]].filter(Boolean),
-                          [match[1], match[3]].filter(Boolean)
-                        )
-                      }
-                    >
-                      {match[0]?.currentRoundScore ?? 0}
-                    </span>
-                    <h1 className="font-mono mx-1">-</h1>
-                    <span
-                      className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
-                      onClick={() =>
-                        openDialog(
-                          [match[1], match[3]].filter(Boolean),
-                          [match[0], match[2]].filter(Boolean)
-                        )
-                      }
-                    >
-                      {match[1]?.currentRoundScore ?? 0}
-                    </span>
-                  </div>
-
-                  <div>
-                    {[1, 3].map((idx) =>
-                      match[idx] ? (
-                        <div key={idx} className="text-black text-right">
-                          <h1 className="pl-2 truncate">{match[idx].name}</h1>
+                        <div>
+                          {[0, 2].map((idx) =>
+                              match[idx] ? (
+                                  <motion.div
+                                      key={match[idx].id}
+                                      className="text-black"
+                                      variants={playerVariants}
+                                      initial="hidden"
+                                      animate="visible"
+                                      exit="exit"
+                                      transition={transitionSettings}
+                                  >
+                                    <h1 className={`pl-2 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                  </motion.div>
+                              ) : null
+                          )}
                         </div>
-                      ) : null
-                    )}
-                  </div>
-                </div>
-              ))}
+
+                        <div className="flex justify-center items-center text-2xl">
+        <span
+            className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
+            onClick={() =>
+                openDialog(
+                    [match[0], match[2]].filter(Boolean),
+                    [match[1], match[3]].filter(Boolean)
+                )
+            }
+        >
+          {match[0]?.currentRoundScore ?? 0}
+        </span>
+                          <h1 className="font-mono mx-1 text-black">-</h1>
+                          <span
+                              className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
+                              onClick={() =>
+                                  openDialog(
+                                      [match[1], match[3]].filter(Boolean),
+                                      [match[0], match[2]].filter(Boolean)
+                                  )
+                              }
+                          >
+          {match[1]?.currentRoundScore ?? 0}
+        </span>
+                        </div>
+
+                        <div>
+                          {[1, 3].map((idx) =>
+                              match[idx] ? (
+                                  <motion.div
+                                      key={match[idx].id}
+                                      className="text-black text-right"
+                                      variants={playerVariants}
+                                      initial="hidden"
+                                      animate="visible"
+                                      exit="exit"
+                                      transition={transitionSettings}
+                                  >
+                                    <h1 className={`pl-2 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                  </motion.div>
+                              ) : null
+                          )}
+                        </div>
+                      </motion.div>
+                  );
+                })}
+
+              </AnimatePresence>
             </div>
           </div>
 
@@ -477,41 +524,54 @@ export const TournamentScreen = () => {
         </div>
       )}
 
+      <AnimatePresence>
       {isDialogOpen && currentTeam.length > 0 && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white text-black p-4 rounded-lg shadow-lg">
-            <h2 className="text-lg font-bold mb-4">
-              Vælg point for hold:{" "}
-              {currentTeam.map((player) => player.name).join(" & ")}
-            </h2>
-            <div className="grid grid-cols-11 gap-2">
-              {Array.from({ length: 33 }, (_, i) => (
+          <motion.div
+              className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+          >
+            <motion.div
+                className="bg-white text-black p-6 rounded-lg shadow-lg"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <h2 className="text-lg font-bold mb-4">
+                Vælg point for hold: {currentTeam.map((player) => player.name).join(" & ")}
+              </h2>
+              <div className="grid grid-cols-11 gap-2">
+                {Array.from({ length: 33 }, (_, i) => (
+                    <button
+                        key={i}
+                        className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono transition-all duration-200"
+                        onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
+                    >
+                      {i}
+                    </button>
+                ))}
+              </div>
+              <div className="flex justify-between">
                 <button
-                  key={i}
-                  className="bg-gray-300 hover:bg-gray-300 p-2 rounded-lg font-mono"
-                  onClick={() => updateTeamPoints(currentTeam, opponentTeam, i)}
+                    className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:bg-red-600"
+                    onClick={closeDialog}
                 >
-                  {i}
+                  Annuller
                 </button>
-              ))}
-            </div>
-            <div className="flex justify-between">
-              <button
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                onClick={closeDialog}
-              >
-                Annuller
-              </button>
-              <button
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
-                onClick={resetPoints}
-              >
-                Nulstil
-              </button>
-            </div>
-          </div>
-        </div>
+                <button
+                    className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:bg-red-600"
+                    onClick={resetPoints}
+                >
+                  Nulstil
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
       )}
+      </AnimatePresence>
 
       {remainingPlayers.length > 0 && (
                     <div
@@ -524,6 +584,7 @@ export const TournamentScreen = () => {
           </p>
         </div>
       )}
+
 
       <div className="fixed top-0 left-0 p-2">
         <ArrowLeftStartOnRectangleIcon
