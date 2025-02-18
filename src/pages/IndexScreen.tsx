@@ -18,6 +18,16 @@ export const IndexScreen = () => {
 
   const listRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTo({
+        top: listRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [players]);
+
+
   const saveToLocalStorage = (players: Player[], counter: number) => {
     localStorage.setItem("players", JSON.stringify(players));
     localStorage.setItem("playerIdCounter", counter.toString());
@@ -82,7 +92,7 @@ export const IndexScreen = () => {
     navigate("/turnering");
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" && playerName.trim() !== "") {
       addPlayer(playerName.trim());
     }
@@ -202,7 +212,7 @@ export const IndexScreen = () => {
             id="playername"
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="playername"
             className="peer h-8 w-full mt-2 border-none bg-transparent p-0 placeholder-transparent focus:border-transparent focus:outline-none focus:ring-0 text-xl"
           />

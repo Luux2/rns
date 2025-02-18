@@ -10,7 +10,7 @@ import {
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
 import {AnimatePresence, motion} from "framer-motion";
-import gif from "../../public/fire.gif";
+import gif from "../assets/fire.gif";
 
 export const TournamentScreen = () => {
   const navigate = useNavigate();
