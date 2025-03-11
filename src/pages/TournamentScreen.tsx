@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
   ArrowLeftStartOnRectangleIcon,
-  ArrowRightIcon,
+  ArrowRightIcon, HashtagIcon,
 } from "@heroicons/react/24/outline";
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
@@ -21,6 +21,9 @@ export const TournamentScreen = () => {
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
   const [sitovers, setSitovers] = useState<Player[]>([]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
+  const [useCourtNumbers2, setUseCourtNumbers2] = useState(false);
+
+
 
   useEffect(() => {
     setIsStartDialogOpen(true);
@@ -50,6 +53,22 @@ export const TournamentScreen = () => {
     "Bane 7",
     "Bane 15"
   ]);
+
+  const [courtNumbers2] = useState<string[]>([
+    "Bane 8",
+    "Bane 9",
+    "Bane 10",
+    "Bane 11",
+    "Bane 12",
+    "Bane 2",
+    "Bane 3",
+    "Bane 4",
+    "Bane 7",
+    "Bane 13",
+    "Bane 15"
+  ]);
+
+  const currentCourts = useCourtNumbers2 ? courtNumbers2 : courtNumbers;
 
 
   useEffect(() => {
@@ -303,6 +322,10 @@ export const TournamentScreen = () => {
 
   const handleExit = () => navigate("/");
 
+  const handleCourtChange = () => {
+    setUseCourtNumbers2(prevState => !prevState);
+  }
+
   const openDialog = (team: Player[], opponentTeam: Player[]) => {
     setCurrentTeam(team);
     setOpponentTeam(opponentTeam);
@@ -395,7 +418,7 @@ export const TournamentScreen = () => {
             </div>
 
             <div className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid ${matches.length <= 4 ? "grid-cols-1" : matches.length <= 8 ? "grid-cols-2" : "grid-cols-3"}`}>
-              <AnimatePresence mode="wait">
+              <AnimatePresence>
                 {matches.map((match, index) => {
                   // Tjek om et af holdene har en score på 27 eller mere
                   const team1Score = match[0]?.currentRoundScore ?? 0;
@@ -405,7 +428,7 @@ export const TournamentScreen = () => {
                   return (
                       <motion.div
                           key={index}
-                          className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-orange-500 via-yellow-300 to-sky-300 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 px-1"}`}
+                          className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-orange-500 via-yellow-300 to-sky-300 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
                           variants={matchVariants}
                           style={isHighScore ? { backgroundImage: `url(${gif})`, backgroundSize: "cover", backgroundPosition: "center"} : {}}
                           initial="hidden"
@@ -416,8 +439,9 @@ export const TournamentScreen = () => {
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                           <div className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
                             {matches.length < 9
-                                ? courtNumbers.filter((court) => court !== "Bane 1")[index % (courtNumbers.length - 1)]
-                                : courtNumbers[index % courtNumbers.length]}
+                                ? currentCourts.filter((court) => court !== "Bane 1")[index % (currentCourts.length - 1)]
+                                : currentCourts[index % currentCourts.length]}
+
                           </div>
                         </div>
 
@@ -433,7 +457,7 @@ export const TournamentScreen = () => {
                                       exit="exit"
                                       transition={transitionSettings}
                                   >
-                                    <h1 className={`pl-2 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                    <h1 className={`truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
                                   </motion.div>
                               ) : null
                           )}
@@ -477,7 +501,7 @@ export const TournamentScreen = () => {
                                       exit="exit"
                                       transition={transitionSettings}
                                   >
-                                    <h1 className={`pl-2 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                    <h1 className={`pl-1 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
                                   </motion.div>
                               ) : null
                           )}
@@ -498,7 +522,7 @@ export const TournamentScreen = () => {
       </Animation>
 
       {isStartDialogOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50">
           <div className="bg-white text-black p-4 rounded-lg shadow-lg">
               <h2 className="text-3xl font-bold mb-4">Velkommen til Rise 'n Shine ☀️</h2>
               <p className="mb-4 font-semibold text-2xl">Mexicano-format - kampgenerering baseret på placering i
@@ -586,10 +610,14 @@ export const TournamentScreen = () => {
       )}
 
 
-      <div className="fixed top-0 left-0 p-2">
+      <div className="flex justify-between p-2 fixed inset-0 h-fit">
         <ArrowLeftStartOnRectangleIcon
           className="h-8 w-8 cursor-pointer"
           onClick={handleExit}
+        />
+        <HashtagIcon
+            className="h-8 w-8 cursor-pointer"
+            onClick={handleCourtChange}
         />
       </div>
     </>

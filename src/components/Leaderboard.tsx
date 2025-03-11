@@ -53,7 +53,7 @@ const Leaderboard = () => {
             className="h-[calc(100vh-180px)] mr-1 overflow-y-auto cursor-pointer"
             onClick={toggleScrolling}
         >
-            <div className="grid grid-cols-[50%_35%_15%] rounded border border-gray-500 sticky top-0 bg-gray-900">
+            <div className="grid grid-cols-[55%_30%_15%] rounded border border-gray-500 sticky top-0 bg-gray-900">
                 <div></div>
                 <h2 className="text-lg text-center font-bold">V-U-T</h2>
                 <h2 className="text-lg text-center font-bold pl-2">P</h2>
@@ -63,7 +63,7 @@ const Leaderboard = () => {
                 {sortedPlayers.map((player, index) => (
                     <div
                         key={player.id}
-                        className={`grid grid-cols-[50%_35%_15%] items-center rounded-lg shadow-md h-10 ${
+                        className={`grid grid-cols-[55%_30%_15%] items-center rounded-lg shadow-md h-10 ${
                             index === 0 ? "bg-gradient-to-r from-yellow-400 to-white" : "bg-white"
                         } ${
                             index === 1 ? "bg-gradient-to-r from-slate-500 to-white" : "bg-white"
