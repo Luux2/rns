@@ -514,7 +514,8 @@ export const TournamentScreen = () => {
                                       exit="exit"
                                       transition={transitionSettings}
                                   >
-                                    <h1 className={`pl-1 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                    <h1 className={`pl-1 truncate`}>{match[idx].name}</h1>
+                                    {/*<h1 className={`pl-1 truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>*/}
                                   </motion.div>
                               ) : null
                           )}
