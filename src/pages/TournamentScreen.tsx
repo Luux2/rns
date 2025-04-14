@@ -10,7 +10,8 @@ import {
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
 import {AnimatePresence, motion} from "framer-motion";
-import gif from "../assets/fire.gif";
+//import gif from "../assets/fire.gif";
+import eastergif from "../assets/chicken3.gif"
 
 export const TournamentScreen = () => {
   const navigate = useNavigate();
@@ -290,6 +291,8 @@ export const TournamentScreen = () => {
           ]);
         }
       }
+      //TODO: Slet efter påske
+      setEasterCourtIndex(Math.floor(Math.random() * newMatches.length));
 
       // Add sitovers to the list again
       const updatedPlayerScores = updatedPlayers.concat(sitoutPlayers);
@@ -376,6 +379,8 @@ export const TournamentScreen = () => {
 
   const transitionSettings = { duration: 0.8, ease: "easeInOut" };
 
+  const [easterCourtIndex, setEasterCourtIndex] = useState<number>(() => Math.floor(Math.random() * matches.length));
+
   return (
     <>
       <Animation>
@@ -428,9 +433,11 @@ export const TournamentScreen = () => {
                   return (
                       <motion.div
                           key={index}
-                          className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-orange-500 via-yellow-300 to-sky-300 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
+                          className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-pink-200 via-yellow-200 to-green-200 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
+                          //className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t from-orange-500 via-yellow-300 to-sky-300 ${(matches.length === 9 || matches.length === 10) && index === 0 ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
                           variants={matchVariants}
-                          style={isHighScore ? { backgroundImage: `url(${gif})`, backgroundSize: "cover", backgroundPosition: "center"} : {}}
+                          //TODO: Ændr backgroundSize til cover
+                          style={isHighScore ? { backgroundImage: /*`url(${gif})`*/ `url(${eastergif}`, backgroundSize: "contain", backgroundPosition: "center"} : {}}
                           initial="hidden"
                           animate="visible"
                           exit="exit"
@@ -438,11 +445,16 @@ export const TournamentScreen = () => {
                       >
                         <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full shadow-md">
                           <div className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
+                            {(matches.length < 9
+                                    ? currentCourts.filter((court) => court !== "Bane 1")[index % (currentCourts.length - 1)]
+                                    : currentCourts[index % currentCourts.length])
+                                + (index === easterCourtIndex ? " 🐣" : "")}
+                          </div>
+                          {/*<div className="font-bold text-black text-center bg-transparent border-none focus:outline-none focus:ring-0 w-24 py-1">
                             {matches.length < 9
                                 ? currentCourts.filter((court) => court !== "Bane 1")[index % (currentCourts.length - 1)]
                                 : currentCourts[index % currentCourts.length]}
-
-                          </div>
+                          </div>*/}
                         </div>
 
                         <div>
@@ -457,24 +469,25 @@ export const TournamentScreen = () => {
                                       exit="exit"
                                       transition={transitionSettings}
                                   >
-                                    <h1 className={`truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>
+                                    <h1 className={`truncate`}>{match[idx].name}</h1>
+                                    {/*<h1 className={`truncate ${isHighScore ? "text-white" : "text-black"}`}>{match[idx].name}</h1>*/}
                                   </motion.div>
                               ) : null
                           )}
                         </div>
 
                         <div className="flex justify-center items-center text-2xl">
-        <span
-            className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
-            onClick={() =>
-                openDialog(
+                          <span
+                              className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
+                              onClick={() =>
+                                  openDialog(
                     [match[0], match[2]].filter(Boolean),
-                    [match[1], match[3]].filter(Boolean)
-                )
-            }
-        >
-          {match[0]?.currentRoundScore ?? 0}
-        </span>
+                    [match[1], match[3]].filter(Boolean))
+                          }
+                          >
+                            {match[0]?.currentRoundScore ?? 0}
+                          </span>
+
                           <h1 className="font-mono mx-1 text-black">-</h1>
                           <span
                               className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
@@ -485,8 +498,8 @@ export const TournamentScreen = () => {
                                   )
                               }
                           >
-          {match[1]?.currentRoundScore ?? 0}
-        </span>
+                            {match[1]?.currentRoundScore ?? 0}
+                          </span>
                         </div>
 
                         <div>
