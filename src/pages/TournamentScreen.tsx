@@ -53,7 +53,8 @@ export const TournamentScreen = () => {
     "Bane 3",
     "Bane 4",
     "Bane 7",
-    "Bane 15"
+    "Bane 15",
+    "Bane 16"
   ]);
 
   /*const [courtNumbers2] = useState<string[]>([
@@ -80,7 +81,8 @@ export const TournamentScreen = () => {
     "Bane 4",
     "Bane 7",
     "Bane 13",
-    "Bane 15"
+    "Bane 15",
+    "Bane 16"
   ]);
 
   const currentCourts = useCourtNumbers2 ? courtNumbers2 : courtNumbers;
