@@ -56,12 +56,25 @@ export const TournamentScreen = () => {
     "Bane 15"
   ]);
 
-  const [courtNumbers2] = useState<string[]>([
+  /*const [courtNumbers2] = useState<string[]>([
     "Bane 8",
     "Bane 9",
     "Bane 10",
     "Bane 11",
     "Bane 12",
+    "Bane 2",
+    "Bane 3",
+    "Bane 4",
+    "Bane 7",
+    "Bane 13",
+    "Bane 15"
+  ]);*/
+  const [courtNumbers2] = useState<string[]>([
+    "Bane 9",
+    "Bane 10",
+    "Bane 11",
+    "Bane 12",
+    "Bane 1",
     "Bane 2",
     "Bane 3",
     "Bane 4",
@@ -541,6 +554,7 @@ export const TournamentScreen = () => {
                 rør</p>
               <p className="mb-4 font-semibold text-2xl">Hvis ikke der er mere kaffe er det Jens' skyld</p>
               <p className="mb-4 font-semibold text-2xl">Hvis appen ikke virker er det nok også Jens' skyld</p>
+            <p className="mb-4 font-semibold text-4xl">Hvis bane 8 er i stykker er det Cavs skyld</p>
             <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
             <div className="flex justify-end">
                 <button className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
