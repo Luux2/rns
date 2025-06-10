@@ -57,7 +57,7 @@ export const TournamentScreen = () => {
     "Bane 16"
   ]);
 
-  /*const [courtNumbers2] = useState<string[]>([
+  const [courtNumbers2] = useState<string[]>([
     "Bane 8",
     "Bane 9",
     "Bane 10",
@@ -69,20 +69,6 @@ export const TournamentScreen = () => {
     "Bane 7",
     "Bane 13",
     "Bane 15"
-  ]);*/
-  const [courtNumbers2] = useState<string[]>([
-    "Bane 9",
-    "Bane 10",
-    "Bane 11",
-    "Bane 12",
-    "Bane 1",
-    "Bane 2",
-    "Bane 3",
-    "Bane 4",
-    "Bane 7",
-    "Bane 13",
-    "Bane 15",
-    "Bane 16"
   ]);
 
   const currentCourts = useCourtNumbers2 ? courtNumbers2 : courtNumbers;
@@ -544,19 +530,17 @@ export const TournamentScreen = () => {
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50">
           <div className="bg-white text-black p-4 rounded-lg shadow-lg">
               <h2 className="text-3xl font-bold mb-4">Velkommen til Rise 'n Shine ☀️</h2>
-              <p className="mb-4 font-semibold text-2xl">Mexicano-format - kampgenerering baseret på placering i
-                stillingen</p>
+              <p className="mb-4 font-semibold text-2xl">Mexicano-format - kampgenerering baseret på placering</p>
               <p className="mb-4 font-semibold text-2xl">Bedst á 32 point pr. kamp</p>
               <p className="mb-4 font-semibold text-2xl">2x4 server pr. spiller</p>
               <p className="mb-4 font-semibold text-2xl">Parret til venstre starter med serven</p>
-              <p className="mb-4 font-semibold text-2xl">Brug endelig de første 5 minutter på at varme op</p>
               <p className="mb-4 font-semibold text-2xl">Parret til venstre tager bolde med ud til banerne - smid ikke
                 rørene ud!</p>
-              <p className="mb-4 font-semibold text-2xl">Efter sidste runde bedes I tage boldene med tilbage - gerne med
-                rør</p>
+              <p className="mb-4 font-semibold text-2xl">Brug endelig de første 5 minutter på at varme op</p>
+              <p className="mb-4 font-semibold text-2xl">Efter sidste runde bedes I tage boldene med tilbage - gerne i
+                røret</p>
               <p className="mb-4 font-semibold text-2xl">Hvis ikke der er mere kaffe er det Jens' skyld</p>
               <p className="mb-4 font-semibold text-2xl">Hvis appen ikke virker er det nok også Jens' skyld</p>
-            <p className="mb-4 font-semibold text-4xl">Hvis bane 8 er i stykker er det Cavs skyld</p>
             <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
             <div className="flex justify-end">
                 <button className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
