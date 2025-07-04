@@ -48,6 +48,7 @@ export const IndexScreen = () => {
       draws: 0,
       currentRoundScore: 0,
       isRoundFinalized: false,
+      timeSatOut: 0,
     };
 
     const updatedPlayers = [...players, newPlayer];
