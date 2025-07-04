@@ -1,48 +1,56 @@
 import { Player } from "../interfaces/interfaces.ts";
 
 /**
- * Determines the initial set of players to sit out.
- * @param players - The array of all players.
- * @returns An object containing the initial sitovers and their IDs.
+ * Creates the initial random arrangement for the first round.
+ * It shuffles players, selects the first sitovers, and increments their `timeSatOut` counter.
+ * @param players - The initial array of all players, with `timeSatOut` initialized to 0.
+ * @returns An object with the newly ordered players list and the players who are sitting out.
  */
-export const getInitialSitovers = (players: Player[]) => {
-  const numberOfSitouts = players.length % 4;
-  if (players.length > 0 && numberOfSitouts > 0) {
-    const shuffledPlayers = [...players].sort(() => 0.5 - Math.random());
-    const initialSitovers = shuffledPlayers.slice(0, numberOfSitouts);
-    return {
-      sitovers: initialSitovers,
-      hasSatOut: initialSitovers.map((p) => p.id),
-    };
+export const createInitialArrangement = (players: Player[]) => {
+  const shuffled = [...players].sort(() => 0.5 - Math.random());
+  const numSitouts = players.length % 4;
+
+  if (numSitouts === 0) {
+    return { orderedPlayers: shuffled, sitovers: [] };
   }
-  return { sitovers: [], hasSatOut: [] };
+
+  const sitoversToUpdate = shuffled.slice(-numSitouts);
+  const playing = shuffled.slice(0, shuffled.length - numSitouts);
+
+  // Increment timeSatOut for the players who are sitting out this first round
+  const updatedSitovers = sitoversToUpdate.map((p) => ({
+    ...p,
+    timeSatOut: p.timeSatOut + 1,
+  }));
+
+  // The new player list is the playing group followed by the updated sitover group
+  const orderedPlayers = [...playing, ...updatedSitovers];
+
+  return { orderedPlayers, sitovers: updatedSitovers };
 };
 
 /**
- * Selects the next set of players to sit out for the upcoming round.
- * @param players - The array of all players with updated scores.
- * @param hasSatOut - An array of IDs of players who have already sat out.
- * @returns An object containing the new sitovers and the updated list of players who have sat out.
+ * Selects the next players to sit out based on who has the lowest `timeSatOut` count.
+ * @param allPlayers - The array of all players.
+ * @returns An object containing the players selected to sit out (`sitovers`).
  */
-export const selectNextSitovers = (players: Player[], hasSatOut: number[]) => {
-  const numberOfSitouts = players.length % 4;
-  let newHasSatOut = [...hasSatOut];
-
-  if (numberOfSitouts > 0) {
-    let eligibleToSitOut = players.filter((p) => !newHasSatOut.includes(p.id));
-
-    // If all players have sat out, reset the list
-    if (eligibleToSitOut.length < numberOfSitouts) {
-      newHasSatOut = [];
-      eligibleToSitOut = players;
-    }
-
-    const shuffledEligible = eligibleToSitOut.sort(() => 0.5 - Math.random());
-    const sitoutPlayers = shuffledEligible.slice(0, numberOfSitouts);
-    newHasSatOut.push(...sitoutPlayers.map((p) => p.id));
-
-    return { sitovers: sitoutPlayers, hasSatOut: newHasSatOut };
+export const selectNextSitovers = (allPlayers: Player[]) => {
+  const numSitouts = allPlayers.length % 4;
+  if (numSitouts === 0) {
+    return { sitovers: [] };
   }
 
-  return { sitovers: [], hasSatOut: newHasSatOut };
+  // 1. Find the minimum number of times anyone has sat out.
+  const minSitOutCount = Math.min(...allPlayers.map((p) => p.timeSatOut));
+
+  // 2. Filter for players who are eligible (i.e., have sat out the minimum number of times).
+  const eligiblePlayers = allPlayers.filter(
+    (p) => p.timeSatOut === minSitOutCount
+  );
+
+  // 3. Randomly select the required number of sitovers from the eligible pool.
+  const shuffledEligible = eligiblePlayers.sort(() => 0.5 - Math.random());
+  const newSitovers = shuffledEligible.slice(0, numSitouts);
+
+  return { sitovers: newSitovers };
 };

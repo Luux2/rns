@@ -14,36 +14,214 @@ import { AnimatePresence, motion } from "framer-motion";
 import gif from "../assets/fire.gif";
 import ExitDialog from "../components/ExitDialog.tsx";
 import {
-  getInitialSitovers,
+  createInitialArrangement,
   selectNextSitovers,
 } from "../utils/sitoverUtils.ts";
 
 export const TournamentScreen = () => {
   const navigate = useNavigate();
   const { players, setPlayers } = usePlayerContext();
-  const [currentRound, setCurrentRound] = useState(1);
+
+  // --- State Initialization from LocalStorage ---
+  const [playerScores, setPlayerScores] = useState<Player[]>(() => {
+    const stored = localStorage.getItem("players");
+    if (stored) return JSON.parse(stored);
+    return players.map((p) => ({
+      ...p,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      roundPoints: 0,
+      currentRoundScore: 0,
+      isRoundFinalized: false,
+      timeSatOut: 0, // Initialize counter at 0
+    }));
+  });
+
+  const [currentRound, setCurrentRound] = useState<number>(() => {
+    const stored = localStorage.getItem("currentRound");
+    return stored ? parseInt(stored, 10) : 1;
+  });
+
+  const [sitovers, setSitovers] = useState<Player[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
-  const [sitovers, setSitovers] = useState<Player[]>([]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [useCourtNumbers2, setUseCourtNumbers2] = useState(false);
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
-  const [hasSatOut, setHasSatOut] = useState<number[]>([]);
+  const [roundScores, setRoundScores] = useState<{
+    [round: number]: { [playerId: number]: number };
+  }>(() => {
+    const stored = localStorage.getItem("roundScores");
+    return stored ? JSON.parse(stored) : {};
+  });
+
+  // --- State Persistence to LocalStorage ---
+  useEffect(() => {
+    localStorage.setItem("players", JSON.stringify(playerScores));
+    setPlayers(playerScores);
+  }, [playerScores, setPlayers]);
 
   useEffect(() => {
-    setIsStartDialogOpen(true);
+    localStorage.setItem("currentRound", currentRound.toString());
+  }, [currentRound]);
+
+  useEffect(() => {
+    localStorage.setItem("roundScores", JSON.stringify(roundScores));
+  }, [roundScores]);
+
+  // --- Initial Tournament Setup ---
+  useEffect(() => {
+    if (!localStorage.getItem("tournamentStarted")) {
+      setIsStartDialogOpen(true);
+    }
+    if (!localStorage.getItem("tournamentStarted") && playerScores.length > 0) {
+      const { orderedPlayers } = createInitialArrangement(playerScores);
+      setPlayerScores(orderedPlayers);
+      localStorage.setItem("tournamentStarted", "true");
+    }
   }, []);
 
-  const [playerScores, setPlayerScores] = useState<Player[]>(
-    players.map((player) => ({
-      ...player,
-      roundPoints: 0,
-      currentRoundScore: 0, // New field to track current round's temporary score
-    }))
+  // --- Derived State ---
+  useEffect(() => {
+    const numSitouts = playerScores.length % 4;
+    if (numSitouts > 0) {
+      setSitovers(playerScores.slice(-numSitouts));
+    } else {
+      setSitovers([]);
+    }
+  }, [playerScores]);
+
+  const matches: Player[][] = [];
+  const playingScores = playerScores.filter(
+    (p) => !sitovers.some((s) => s.id === p.id)
   );
-  const savePlayersToLocalStorage = (players: Player[]) => {
-    localStorage.setItem("players", JSON.stringify(players));
+  for (let i = 0; i < playingScores.length; i += 4) {
+    matches.push(playingScores.slice(i, i + 4));
+  }
+
+  // --- Handlers and Logic ---
+  const handleNextRound = () => {
+    if (!allMatchesHaveScores()) return;
+
+    // 1. Finalize scores from the completed round.
+    const finalizedScores = playerScores.map((player) => {
+      const isSitover = sitovers.some((s) => s.id === player.id);
+      const pointsForRound = isSitover ? 16 : player.roundPoints;
+
+      const updatedPlayer = { ...player };
+      updatedPlayer.points += pointsForRound;
+
+      if (!isSitover) {
+        if (pointsForRound > 16) updatedPlayer.wins += 1;
+        else if (pointsForRound < 16 && pointsForRound > 0)
+          updatedPlayer.losses += 1;
+        else if (pointsForRound === 16) updatedPlayer.draws += 1;
+      }
+
+      updatedPlayer.roundPoints = 0;
+      updatedPlayer.currentRoundScore = 0;
+      updatedPlayer.isRoundFinalized = false;
+
+      return updatedPlayer;
+    });
+
+    // 2. Sort players by their new total points.
+    const sortedPlayers = [...finalizedScores].sort(
+      (a, b) => b.points - a.points
+    );
+
+    // 3. Select sitovers for the NEXT round based on the fairest distribution.
+    const { sitovers: nextSitovers } = selectNextSitovers(sortedPlayers);
+
+    // 4. Increment the sit-out counter for the players just selected to sit out.
+    const playersWithUpdatedSitoutCount = sortedPlayers.map((p) => {
+      if (nextSitovers.some((s) => s.id === p.id)) {
+        return { ...p, timeSatOut: p.timeSatOut + 1 };
+      }
+      return p;
+    });
+
+    // 5. Create the final player list for the next round.
+    const playingNextRound = playersWithUpdatedSitoutCount.filter(
+      (p) => !nextSitovers.some((s) => s.id === p.id)
+    );
+    const nextRoundPlayerOrder = [...playingNextRound, ...nextSitovers];
+
+    // 6. Update state for the new round.
+    setPlayerScores(nextRoundPlayerOrder);
+    setCurrentRound((prev) => prev + 1);
+  };
+
+  const handleExit = () => {
+    localStorage.removeItem("players");
+    localStorage.removeItem("hasSatOut"); // Keep for cleanup
+    localStorage.removeItem("roundScores");
+    localStorage.removeItem("currentRound");
+    localStorage.removeItem("tournamentStarted");
+    setPlayers([]);
+    navigate("/");
+  };
+
+  const updateTeamPoints = (
+    team: Player[],
+    opponentTeam: Player[],
+    newPoints: number
+  ) => {
+    setPlayerScores((prevScores) =>
+      prevScores.map((player) => {
+        let updatedPlayer = { ...player };
+        if (team.some((teammate) => teammate.id === player.id)) {
+          updatedPlayer.currentRoundScore = newPoints;
+          updatedPlayer.roundPoints = newPoints;
+        } else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
+          const opponentScore = 32 - newPoints;
+          updatedPlayer.currentRoundScore = opponentScore;
+          updatedPlayer.roundPoints = opponentScore;
+        }
+        return updatedPlayer;
+      })
+    );
+    closeDialog();
+  };
+
+  const allMatchesHaveScores = () => {
+    if (matches.length === 0 && sitovers.length > 0) return true;
+    return matches.every((match) => {
+      const totalScore = match.reduce(
+        (sum, player) => sum + (player.roundPoints || 0),
+        0
+      );
+      return totalScore > 0;
+    });
+  };
+
+  const closeDialog = () => {
+    setCurrentTeam([]);
+    setIsDialogOpen(false);
+  };
+
+  const openDialog = (team: Player[], opponentTeam: Player[]) => {
+    setCurrentTeam(team);
+    setOpponentTeam(opponentTeam);
+    setIsDialogOpen(true);
+  };
+
+  const resetPoints = () => {
+    setPlayerScores((prevScores) =>
+      prevScores.map((player) => {
+        if (
+          currentTeam.some((t) => t.id === player.id) ||
+          opponentTeam.some((o) => o.id === player.id)
+        ) {
+          return { ...player, roundPoints: 0, currentRoundScore: 0 };
+        }
+        return player;
+      })
+    );
+    closeDialog();
   };
 
   const [courtNumbers] = useState<string[]>([
@@ -60,7 +238,6 @@ export const TournamentScreen = () => {
     "Bane 15",
     "Bane 16",
   ]);
-
   const [courtNumbers2] = useState<string[]>([
     "Bane 8",
     "Bane 9",
@@ -74,319 +251,22 @@ export const TournamentScreen = () => {
     "Bane 13",
     "Bane 15",
   ]);
-
   const currentCourts = useCourtNumbers2 ? courtNumbers2 : courtNumbers;
-
-  useEffect(() => {
-    const storedPlayers = localStorage.getItem("players");
-    if (storedPlayers) {
-      setPlayerScores(JSON.parse(storedPlayers));
-    }
-  }, []);
-
-  useEffect(() => {
-    // Initial sitout selection
-    if (playerScores.length > 0 && hasSatOut.length === 0) {
-      const { sitovers: initialSitovers, hasSatOut: initialHasSatOut } =
-        getInitialSitovers(playerScores);
-      setSitovers(initialSitovers);
-      setHasSatOut(initialHasSatOut);
-    }
-  }, [playerScores, hasSatOut.length]);
-
-  useEffect(() => {
-    savePlayersToLocalStorage(playerScores);
-  }, [playerScores]);
-
-  useEffect(() => {
-    if (playerScores.length > 0 && playerScores.length % 4 !== 0) {
-      const remainingPlayers = playerScores.slice(-(playerScores.length % 4));
-      setSitovers(remainingPlayers);
-    }
-  }, [playerScores]);
-
-  useEffect(() => {
-    savePlayersToLocalStorage(playerScores);
-  }, [playerScores]);
-
-  const matches: Player[][] = [];
-  for (let i = 0; i < playerScores.length; i += 4) {
-    const matchPlayers = playerScores.slice(i, i + 4);
-    if (matchPlayers.length === 4) {
-      matches.push(matchPlayers);
-    }
-  }
-
-  const saveRoundScoresToLocalStorage = (roundScores: {
-    [round: number]: { [playerId: number]: number };
-  }) => {
-    localStorage.setItem("roundScores", JSON.stringify(roundScores));
-  };
-
-  const loadRoundScoresFromLocalStorage = () => {
-    const storedRoundScores = localStorage.getItem("roundScores");
-    return storedRoundScores ? JSON.parse(storedRoundScores) : {};
-  };
-
-  const [roundScores, setRoundScores] = useState<{
-    [round: number]: { [playerId: number]: number };
-  }>(loadRoundScoresFromLocalStorage());
-  const [totalRounds, setTotalRounds] = useState<number>(1);
-
-  const updateTeamPoints = (
-    team: Player[],
-    opponentTeam: Player[],
-    newPoints: number
-  ) => {
-    setPlayerScores((prevScores) =>
-      prevScores.map((player) => {
-        let updatedPlayer = { ...player };
-
-        // If points are already finalized for this player, don't update
-        if (updatedPlayer.isRoundFinalized) {
-          return updatedPlayer;
-        }
-
-        // Update current round score for the specific team
-        if (team.some((teammate) => teammate.id === player.id)) {
-          updatedPlayer = {
-            ...updatedPlayer,
-            currentRoundScore: newPoints,
-            roundPoints: newPoints,
-            isRoundFinalized: false, // Allow points to change until "Next Round"
-          };
-        }
-        // Update opponent team's score
-        else if (opponentTeam.some((opponent) => opponent.id === player.id)) {
-          const opponentScore = 32 - newPoints;
-          updatedPlayer = {
-            ...updatedPlayer,
-            currentRoundScore: opponentScore,
-            roundPoints: opponentScore,
-            isRoundFinalized: false, // Allow points to change until "Next Round"
-          };
-        }
-
-        return updatedPlayer;
-      })
-    );
-
-    // Save the points for the current round
-    const updatedRoundScores = {
-      ...roundScores,
-      [currentRound]: {
-        ...roundScores[currentRound],
-        ...team.reduce((acc, player) => {
-          acc[player.id] = newPoints;
-          return acc;
-        }, {} as { [playerId: number]: number }),
-        ...opponentTeam.reduce((acc, player) => {
-          acc[player.id] = 32 - newPoints;
-          return acc;
-        }, {} as { [playerId: number]: number }),
-      },
-    };
-
-    setRoundScores(updatedRoundScores);
-    saveRoundScoresToLocalStorage(updatedRoundScores);
-
-    closeDialog();
-  };
-
-  const allMatchesHaveScores = () => {
-    if (matches.length > 0) {
-      return matches.every((match) => {
-        const scores = match.map((player) => player.roundPoints || 0);
-        const totalScore = scores.reduce((a, b) => a + b, 0);
-        return totalScore > 0;
-      });
-    }
-    return false;
-  };
-
-  const handleNextRound = () => {
-    if (allMatchesHaveScores()) {
-      if (currentRound < totalRounds) {
-        setCurrentRound((prevRound) => prevRound + 1);
-        // Restore the points for the next round
-        setPlayerScores((prevScores) =>
-          prevScores.map((player) => ({
-            ...player,
-            roundPoints: roundScores[currentRound + 1]?.[player.id] || 0,
-            currentRoundScore: roundScores[currentRound + 1]?.[player.id] || 0,
-          }))
-        );
-        return;
-      }
-
-      // Add 16 points to sitover players
-      for (const sitover of sitovers) {
-        setPlayerScores((prevScores) =>
-          prevScores.map((player) => {
-            if (player.id === sitover.id) {
-              return {
-                ...player,
-                roundPoints: 16,
-                isRoundFinalized: true,
-              };
-            }
-            return player;
-          })
-        );
-      }
-      // Reset the sitover list at the start of each new round
-      setSitovers([]);
-
-      // Award 16 points to remaining players who haven't received points yet
-      const updatedScoresWithRemainingPlayers = playerScores.map((player) => {
-        if (remainingPlayers.some((p) => p.id === player.id)) {
-          // Assign 16 points only if they haven't received it yet
-          if (player.roundPoints === 0) {
-            return {
-              ...player,
-              roundPoints: 0, // Assign 16 points for sitting out
-              points: player.points + 16, // Update total points
-            };
-          }
-        }
-        return player;
-      });
-
-      // Update player stats based on round performance
-      const updatedScores = updatedScoresWithRemainingPlayers.map((player) => {
-        const updatedPlayer = {
-          ...player,
-          points: player.points + player.roundPoints, // Add round points to total points
-          roundPoints: 0, // Reset round points after finalizing
-          currentRoundScore: 0, // Reset current round score
-        };
-
-        // Determine win, tie, or loss based on roundPoints
-        if (player.roundPoints > 16) {
-          updatedPlayer.wins += 1;
-        } else if (player.roundPoints === 16) {
-          updatedPlayer.draws += 1;
-        } else if (player.roundPoints > 0) {
-          updatedPlayer.losses += 1;
-        }
-
-        return updatedPlayer;
-      });
-
-      // Select sitovers for the next round
-      const { sitovers: nextSitovers, hasSatOut: nextHasSatOut } =
-        selectNextSitovers(updatedScores, hasSatOut);
-      setSitovers(nextSitovers);
-      setHasSatOut(nextHasSatOut);
-
-      // Sort players by total points in descending order
-      const sortedPlayers = [...updatedScores].sort(
-        (a, b) => b.points - a.points
-      );
-
-      // Remove sitout players from the list of players who are playing
-      const updatedPlayers = sortedPlayers.filter(
-        (player) => !nextSitovers.some((sitout) => sitout.id === player.id)
-      );
-
-      // Create new matches: pair 1 & 3, 2 & 4, etc.
-      const newMatches: Player[][] = [];
-      for (let i = 0; i < updatedPlayers.length; i += 4) {
-        const matchPlayers = updatedPlayers.slice(i, i + 4);
-
-        if (matchPlayers.length === 4) {
-          // Pair the players by their ranking (1st & 3rd, 2nd & 4th)
-          newMatches.push([
-            matchPlayers[0],
-            matchPlayers[2],
-            matchPlayers[1],
-            matchPlayers[3],
-          ]);
-        }
-      }
-
-      // Add sitovers to the list again
-      const updatedPlayerScores = updatedPlayers.concat(nextSitovers);
-
-      // Update players and increment round
-      setPlayerScores(updatedPlayerScores);
-      setCurrentRound((prevRound) => prevRound + 1);
-      setTotalRounds((prevTotal) => prevTotal + 1);
-      resetPoints();
-    }
-  };
-
-  useEffect(() => {
-    setPlayers(playerScores);
-  }, [playerScores, setPlayers]);
-
-  /*const handlePreviousRound = () => {
-    if (currentRound > 1) {
-      setCurrentRound((prevRound) => prevRound - 1);
-      // Restore the points for the previous round
-      setPlayerScores((prevScores) =>
-        prevScores.map((player) => ({
-          ...player,
-          roundPoints: roundScores[currentRound - 1]?.[player.id] || 0,
-          currentRoundScore: roundScores[currentRound - 1]?.[player.id] || 0,
-        }))
-      );
-    }
-  };*/
-
-  const handleCourtChange = () => {
-    setUseCourtNumbers2((prevState) => !prevState);
-  };
-
-  const openDialog = (team: Player[], opponentTeam: Player[]) => {
-    setCurrentTeam(team);
-    setOpponentTeam(opponentTeam);
-    setIsDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setCurrentTeam([]);
-    setIsDialogOpen(false);
-  };
-
-  const resetPoints = () => {
-    setPlayerScores((prevScores) =>
-      prevScores.map((player) => {
-        if (
-          currentTeam.some((teammate) => teammate.id === player.id) ||
-          opponentTeam.some((opponent) => opponent.id === player.id)
-        ) {
-          return {
-            ...player,
-            roundPoints: 0,
-            currentRoundScore: 0,
-          };
-        }
-        return player;
-      })
-    );
-    closeDialog();
-  };
-
-  // Sitovers saved in variable remainingPlayers
-  const remainingPlayers = playerScores.filter((player) =>
-    sitovers.some((sitover) => sitover.id === player.id)
-  );
+  const handleCourtChange = () => setUseCourtNumbers2((prev) => !prev);
 
   const playerVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: 10 },
   };
-
   const matchVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.95 },
   };
-
   const transitionSettings = { duration: 0.8, ease: "easeInOut" };
 
+  // --- JSX ---
   return (
     <>
       <div
@@ -395,11 +275,10 @@ export const TournamentScreen = () => {
         }`}
       >
         <ExitDialog
-          handleConfirm={() => navigate("/")}
+          handleConfirm={handleExit}
           onCancel={() => setExitDialogVisible(false)}
         />
       </div>
-
       <Animation>
         <Header />
         <div className="grid grid-cols-[75%_25%]">
@@ -411,17 +290,7 @@ export const TournamentScreen = () => {
               </h1>
               <h1 className="font-semibold">♻️ Husk bolde - begge veje</h1>
             </div>
-
             <div className="flex justify-between px-6">
-              {/* <ArrowLeftIcon
-                className={`h-8 w-8 ${
-                  currentRound > 1
-                    ? "cursor-pointer"
-                    : "text-black cursor-not-allowed"
-                }`}
-                onClick={handlePreviousRound}
-                aria-disabled={currentRound === 1}
-              /> */}
               <div className="h-8 w-8"></div>
               <h1 className="text-2xl font-bold mb-3 animate-pulse">
                 Runde {currentRound}
@@ -436,7 +305,6 @@ export const TournamentScreen = () => {
                 aria-disabled={!allMatchesHaveScores()}
               />
             </div>
-
             <div
               className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid ${
                 matches.length <= 4
@@ -448,11 +316,9 @@ export const TournamentScreen = () => {
             >
               <AnimatePresence>
                 {matches.map((match, index) => {
-                  // Tjek om et af holdene har en score på 27 eller mere
                   const team1Score = match[0]?.currentRoundScore ?? 0;
                   const team2Score = match[1]?.currentRoundScore ?? 0;
                   const isHighScore = team1Score >= 24 || team2Score >= 24;
-
                   return (
                     <motion.div
                       key={index}
@@ -486,7 +352,6 @@ export const TournamentScreen = () => {
                             : currentCourts[index % currentCourts.length]}
                         </div>
                       </div>
-
                       <div>
                         {[0, 2].map((idx) =>
                           match[idx] ? (
@@ -499,18 +364,19 @@ export const TournamentScreen = () => {
                               exit="exit"
                               transition={transitionSettings}
                             >
+                              {" "}
                               <h1
                                 className={`truncate ${
                                   isHighScore ? "text-white" : "text-black"
                                 }`}
                               >
-                                {match[idx].name}
-                              </h1>
+                                {" "}
+                                {match[idx].name}{" "}
+                              </h1>{" "}
                             </motion.div>
                           ) : null
                         )}
                       </div>
-
                       <div className="flex justify-center items-center text-2xl">
                         <span
                           className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
@@ -521,9 +387,9 @@ export const TournamentScreen = () => {
                             )
                           }
                         >
-                          {match[0]?.currentRoundScore ?? 0}
+                          {" "}
+                          {match[0]?.currentRoundScore ?? 0}{" "}
                         </span>
-
                         <h1 className="font-mono mx-1 text-black">-</h1>
                         <span
                           className="min-w-8 cursor-pointer font-mono bg-gray-900 rounded-full text-center"
@@ -534,10 +400,10 @@ export const TournamentScreen = () => {
                             )
                           }
                         >
-                          {match[1]?.currentRoundScore ?? 0}
+                          {" "}
+                          {match[1]?.currentRoundScore ?? 0}{" "}
                         </span>
                       </div>
-
                       <div>
                         {[1, 3].map((idx) =>
                           match[idx] ? (
@@ -550,13 +416,15 @@ export const TournamentScreen = () => {
                               exit="exit"
                               transition={transitionSettings}
                             >
+                              {" "}
                               <h1
                                 className={`pl-1 truncate ${
                                   isHighScore ? "text-white" : "text-black"
                                 }`}
                               >
-                                {match[idx].name}
-                              </h1>
+                                {" "}
+                                {match[idx].name}{" "}
+                              </h1>{" "}
                             </motion.div>
                           ) : null
                         )}
@@ -567,48 +435,38 @@ export const TournamentScreen = () => {
               </AnimatePresence>
             </div>
           </div>
-
-          {/* Right Column */}
           <div>
             <Leaderboard />
           </div>
         </div>
       </Animation>
-
       {isStartDialogOpen && (
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white text-black p-4 rounded-lg shadow-lg">
+          <div className="bg-white text-black p-4 rounded-lg shadow-lg max-w-4xl">
             <h2 className="text-3xl font-bold mb-4">
-              Velkommen til Rise 'n Shine ☀️
+              {" "}
+              Velkommen til Rise 'n Shine ☀️{" "}
             </h2>
-            <p className="mb-4 font-semibold text-2xl">
-              Mexicano-format - kampgenerering baseret på placering
+            <p className="mb-2 font-semibold text-xl">
+              {" "}
+              Mexicano-format - kampgenerering baseret på placering{" "}
             </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Bedst á 32 point pr. kamp
+            <p className="mb-2 font-semibold text-xl">
+              {" "}
+              Bedst á 32 point pr. kamp{" "}
             </p>
-            <p className="mb-4 font-semibold text-2xl">
-              2x4 server pr. spiller
+            <p className="mb-2 font-semibold text-xl">2x4 server pr. spiller</p>
+            <p className="mb-2 font-semibold text-xl">
+              {" "}
+              Parret til venstre starter med serven og tager bolde med ud.{" "}
             </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Parret til venstre starter med serven
+            <p className="mb-2 font-semibold text-xl">
+              {" "}
+              Efter sidste runde bedes I tage boldene med tilbage.{" "}
             </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Parret til venstre tager bolde med ud til banerne - smid ikke
-              rørene ud!
-            </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Brug endelig de første 5 minutter på at varme op
-            </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Efter sidste runde bedes I tage boldene med tilbage - gerne i
-              røret
-            </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Hvis ikke der er mere kaffe er det Jens' skyld
-            </p>
-            <p className="mb-4 font-semibold text-2xl">
-              Hvis appen ikke virker er det nok også Jens' skyld
+            <p className="mb-4 font-semibold text-xl">
+              {" "}
+              Hvis appen ikke virker er det nok Jens' skyld.{" "}
             </p>
             <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
             <div className="flex justify-end">
@@ -616,13 +474,13 @@ export const TournamentScreen = () => {
                 className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
                 onClick={() => setIsStartDialogOpen(false)}
               >
-                Vamos!
+                {" "}
+                Vamos!{" "}
               </button>
             </div>
           </div>
         </div>
       )}
-
       <AnimatePresence>
         {isDialogOpen && currentTeam.length > 0 && (
           <motion.div
@@ -630,62 +488,64 @@ export const TournamentScreen = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
           >
             <motion.div
               className="bg-white text-black p-6 rounded-lg shadow-lg"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
             >
               <h2 className="text-lg font-bold mb-4">
+                {" "}
                 Vælg point for hold:{" "}
-                {currentTeam.map((player) => player.name).join(" & ")}
+                {currentTeam.map((player) => player.name).join(" & ")}{" "}
               </h2>
               <div className="grid grid-cols-11 gap-2">
                 {Array.from({ length: 33 }, (_, i) => (
                   <button
                     key={i}
-                    className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono transition-all duration-200"
+                    className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono"
                     onClick={() =>
                       updateTeamPoints(currentTeam, opponentTeam, i)
                     }
                   >
-                    {i}
+                    {" "}
+                    {i}{" "}
                   </button>
                 ))}
               </div>
               <div className="flex justify-between">
                 <button
-                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:bg-red-600"
+                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
                   onClick={closeDialog}
                 >
-                  Annuller
+                  {" "}
+                  Annuller{" "}
                 </button>
                 <button
-                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg transition-all duration-200 hover:bg-red-600"
+                  className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg"
                   onClick={resetPoints}
                 >
-                  Nulstil
+                  {" "}
+                  Nulstil{" "}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {remainingPlayers.length > 0 && (
+      {sitovers.length > 0 && (
         <div className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
           <h2 className="text-lg font-bold text-red-500">
-            Sidder over (16 point):
+            {" "}
+            Sidder over (16 point):{" "}
           </h2>
           <p className="text-xl ml-2">
-            {remainingPlayers.map((player) => player.name).join(", ")}
+            {" "}
+            {sitovers.map((player) => player.name).join(", ")}{" "}
           </p>
         </div>
       )}
-
       <div className="flex justify-between p-2 fixed inset-0 h-fit">
         <ArrowLeftStartOnRectangleIcon
           className="h-8 w-8 cursor-pointer"
