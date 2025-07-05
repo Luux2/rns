@@ -51,7 +51,7 @@ export const TournamentScreen = () => {
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
   const [useCourtNumbers2, setUseCourtNumbers2] = useState(false);
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
-  const [roundScores, setRoundScores] = useState<{
+  const [roundScores] = useState<{
     [round: number]: { [playerId: number]: number };
   }>(() => {
     const stored = localStorage.getItem("roundScores");
