@@ -68,7 +68,7 @@ const Leaderboard = () => {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-auto cursor-pointer md:h-[calc(100vh-180px-2.5rem)] md:mr-1"
+      className="h-full w-full overflow-y-auto cursor-pointer md:h-[calc(100vh-120px)] md:mr-1"
       onClick={toggleScrolling}
       data-scroll-direction="down"
     >

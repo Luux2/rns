@@ -50,7 +50,7 @@ export const TournamentScreen = () => {
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
-  const [useCourtNumbers2, setUseCourtNumbers2] = useState(false);
+  const [courtMode, setCourtMode] = useState<"default" | "alt" | "full">("default");
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
   const [reshuffleDialogOpen, setReshuffleDialogOpen] = useState(false);
   const [reshufflePassword, setReshufflePassword] = useState("");
@@ -243,8 +243,30 @@ export const TournamentScreen = () => {
     "Bane 13",
     "Bane 15",
   ]);
-  const currentCourts = useCourtNumbers2 ? courtNumbers2 : courtNumbers;
-  const handleCourtChange = () => setUseCourtNumbers2((prev) => !prev);
+
+  const [courtNumbersFull] = useState<string[]>([
+    "Bane 8",
+    "Bane 9",
+    "Bane 10",
+    "Bane 11",
+    "Bane 12",
+    "Bane 1",
+    "Bane 2",
+    "Bane 3",
+    "Bane 4",
+    "Bane 7",
+    "Bane 13",
+    "Bane 15",
+      "Bane 16"
+  ]);
+
+  const currentCourts =
+      courtMode === "default"
+          ? courtNumbers
+          : courtMode === "alt"
+              ? courtNumbers2
+              : courtNumbersFull;
+
 
   return (
     <>
@@ -265,8 +287,12 @@ export const TournamentScreen = () => {
           onClick={() => setExitDialogVisible(true)}
         />
         <HashtagIcon
-          className="h-8 w-8 cursor-pointer"
-          onClick={handleCourtChange}
+            className="h-8 w-8 cursor-pointer"
+            onClick={() => {
+              setCourtMode((prev) =>
+                  prev === "default" ? "alt" : prev === "alt" ? "full" : "default"
+              );
+            }}
         />
       </div>
 
@@ -344,21 +370,25 @@ export const TournamentScreen = () => {
               />
             </div>
             <div
-              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid grid-cols-1 ${
-                matches.length > 4 ? "md:grid-cols-2" : ""
-              } ${matches.length > 8 ? "lg:grid-cols-3" : ""}`}
+              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid grid-cols-1 ${matches.length > 12
+                  ? "grid-cols-3"
+                  : matches.length > 8
+                      ? "lg:grid-cols-3"
+                      : matches.length > 4
+                          ? "md:grid-cols-2"
+                          : "grid-cols-1"}`}
             >
               <AnimatePresence>
                 {matches.map((match, index) => {
                   const matchKey = match.map((p) => p.id).join("-");
                   const courtName =
                     matches.length < 9
-                      ? currentCourts.filter((court) => court !== "Bane 1")[
+                      ? currentCourts.filter((court: any) => court !== "Bane 1")[
                           index % (currentCourts.length - 1)
                         ]
                       : currentCourts[index % currentCourts.length];
                   const isSpecialLayout =
-                    (matches.length === 9 || matches.length === 10) &&
+                    (matches.length === 9 || matches.length === 10 || matches.length === 13) &&
                     index === 0;
 
                   return (
