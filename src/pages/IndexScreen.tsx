@@ -15,7 +15,6 @@ export const IndexScreen = () => {
   const { players, setPlayers, playerIdCounter, setPlayerIdCounter } =
     usePlayerContext();
   const [playerName, setPlayerName] = useState<string>("");
-
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,9 +33,7 @@ export const IndexScreen = () => {
 
   const addPlayer = (playerName: string) => {
     if (playerName === "") return;
-
     const uniqueName = generateUniqueName(playerName, players);
-
     const newPlayer: Player = {
       id: playerIdCounter,
       name: uniqueName,
@@ -49,7 +46,6 @@ export const IndexScreen = () => {
       isRoundFinalized: false,
       timeSatOut: 0,
     };
-
     const updatedPlayers = [...players, newPlayer];
     setPlayers(updatedPlayers);
     setPlayerIdCounter(playerIdCounter + 1);
@@ -66,12 +62,10 @@ export const IndexScreen = () => {
   const generateUniqueName = (name: string, players: Player[]): string => {
     let newName = name;
     let count = 1;
-
     while (players.some((player) => player.name === newName)) {
       newName = `${name} (${count})`;
       count++;
     }
-
     return newName;
   };
 
@@ -81,19 +75,17 @@ export const IndexScreen = () => {
     localStorage.clear();
   };
 
-  // Show shuffle symbol only if round is 1
   const shufflePlayers = () => {
     const shuffled = [...players].sort(() => Math.random() - 0.5);
     setPlayers(shuffled);
     saveToLocalStorage(shuffled, playerIdCounter);
   };
 
-  // Get current round from localStorage
   const [currentRound, setCurrentRound] = useState<number>(1);
   useEffect(() => {
     const storedRound = localStorage.getItem("currentRound");
     setCurrentRound(storedRound ? parseInt(storedRound, 10) : 1);
-  }, [players]);
+  }, []);
 
   const startTournament = () => {
     shufflePlayers();
@@ -109,15 +101,13 @@ export const IndexScreen = () => {
   useEffect(() => {
     const storedPlayers = localStorage.getItem("players");
     const storedCounter = localStorage.getItem("playerIdCounter");
-
     if (storedPlayers) {
       setPlayers(JSON.parse(storedPlayers));
     }
-
     if (storedCounter) {
       setPlayerIdCounter(Number(storedCounter));
     }
-  }, []);
+  }, [setPlayerIdCounter, setPlayers]);
 
   return (
     <>
@@ -129,16 +119,15 @@ export const IndexScreen = () => {
           <ViewColumnsIcon className="ml-10 h-8 w-8" />
           <h1 className="ml-1 text-2xl">{Math.floor(players.length / 4)}</h1>
         </div>
-
         <div className="flex justify-end space-x-4 items-center relative">
-          <a
+          <button
             className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
               players.length < 1
                 ? "bg-gray-400 border-gray-400 cursor-not-allowed"
                 : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"
             }`}
             onClick={() => resetGame()}
-            aria-disabled={players.length < 1}
+            disabled={players.length < 1}
           >
             <span
               className={`font-medium ${
@@ -158,15 +147,15 @@ export const IndexScreen = () => {
             >
               🗑
             </span>
-          </a>
-          <a
+          </button>
+          <button
             className={`h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
               players.length < 4
                 ? "bg-gray-400 border-gray-400 cursor-not-allowed"
                 : "cursor-pointer bg-sky-500 border-sky-500 hover:bg-transparent focus:outline-none focus:ring"
             }`}
-            onClick={players.length >= 4 ? () => startTournament() : undefined}
-            aria-disabled={players.length < 4}
+            onClick={startTournament}
+            disabled={players.length < 4}
           >
             <span
               className={`font-medium ${
@@ -186,7 +175,7 @@ export const IndexScreen = () => {
             >
               🎾
             </span>
-          </a>
+          </button>
           {currentRound === 1 && (
             <button
               className="absolute right-0 top-1/2 -translate-y-1/2 text-xl bg-white border border-gray-300 rounded-full px-2 py-1 shadow cursor-pointer z-10"
@@ -199,7 +188,6 @@ export const IndexScreen = () => {
           )}
         </div>
       </div>
-
       <div
         ref={listRef}
         className="flex-col p-4 overflow-y-auto pb-4"
@@ -218,7 +206,6 @@ export const IndexScreen = () => {
           </div>
         ))}
       </div>
-
       <div className="fixed bottom-0 left-0 w-full p-4 bg-gray-900">
         <label
           htmlFor="playername"
@@ -253,5 +240,3 @@ export const IndexScreen = () => {
     </>
   );
 };
-
-export default IndexScreen;
