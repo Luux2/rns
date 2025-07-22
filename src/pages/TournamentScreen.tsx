@@ -19,6 +19,27 @@ import {
 } from "../utils/sitoverUtils.ts";
 
 export const TournamentScreen = () => {
+  // Reshuffle button with password protection
+  const [reshuffleDialogOpen, setReshuffleDialogOpen] = useState(false);
+  const [reshufflePassword, setReshufflePassword] = useState("");
+  const [reshuffleError, setReshuffleError] = useState("");
+
+  const reshuffleFirstRound = () => {
+    const { orderedPlayers } = createInitialArrangement(playerScores);
+    setPlayerScores(orderedPlayers);
+    localStorage.setItem("players", JSON.stringify(orderedPlayers));
+    setReshuffleDialogOpen(false);
+    setReshufflePassword("");
+    setReshuffleError("");
+  };
+
+  const handleReshuffleSubmit = () => {
+    if (reshufflePassword === "4747") {
+      reshuffleFirstRound();
+    } else {
+      setReshuffleError("Forkert adgangskode");
+    }
+  };
   const navigate = useNavigate();
   const { players, setPlayers } = usePlayerContext();
 
@@ -155,13 +176,8 @@ export const TournamentScreen = () => {
     setCurrentRound((prev) => prev + 1);
   };
 
+  // Exit tournament: just go home, do NOT reset users
   const handleExit = () => {
-    localStorage.removeItem("players");
-    localStorage.removeItem("hasSatOut"); // Keep for cleanup
-    localStorage.removeItem("roundScores");
-    localStorage.removeItem("currentRound");
-    localStorage.removeItem("tournamentStarted");
-    setPlayers([]);
     navigate("/");
   };
 
@@ -279,6 +295,67 @@ export const TournamentScreen = () => {
           onCancel={() => setExitDialogVisible(false)}
         />
       </div>
+      {/* Subtle reshuffle button next to exit, only in first round */}
+      <div className="flex justify-between p-2 fixed inset-0 h-fit">
+        <div className="flex gap-2 items-center">
+          <ArrowLeftStartOnRectangleIcon
+            className="h-8 w-8 cursor-pointer"
+            onClick={() => setExitDialogVisible(true)}
+          />
+        </div>
+        <HashtagIcon
+          className="h-8 w-8 cursor-pointer"
+          onClick={handleCourtChange}
+        />
+      </div>
+      {currentRound === 1 && (
+        <button
+          className="fixed left-2 bottom-2 text-gray-400 opacity-20 hover:opacity-80 text-lg bg-transparent border-none p-0 m-0 z-50"
+          style={{ fontWeight: 500, background: "none" }}
+          onClick={() => setReshuffleDialogOpen(true)}
+          title="Bland spillerne igen"
+          aria-label="Shuffle first round"
+        >
+          🔄
+        </button>
+      )}
+      {reshuffleDialogOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col gap-4 w-80">
+            <h2 className="text-xl font-bold text-black">Reshuffle 1. runde</h2>
+            <label className="text-black">Adgangskode:</label>
+            <input
+              type="password"
+              value={reshufflePassword}
+              onChange={(e) => {
+                setReshufflePassword(e.target.value);
+                setReshuffleError("");
+              }}
+              className="border rounded p-2"
+              autoFocus
+            />
+            {reshuffleError && <p className="text-red-500">{reshuffleError}</p>}
+            <div className="flex gap-2">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded"
+                onClick={() => {
+                  setReshuffleDialogOpen(false);
+                  setReshufflePassword("");
+                  setReshuffleError("");
+                }}
+              >
+                Annuller
+              </button>
+              <button
+                className="bg-green-500 text-white px-4 py-2 rounded"
+                onClick={handleReshuffleSubmit}
+              >
+                Bekræft
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Animation>
         <Header />
         <div className="grid grid-cols-[75%_25%]">

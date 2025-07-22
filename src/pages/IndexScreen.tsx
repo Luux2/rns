@@ -27,7 +27,6 @@ export const IndexScreen = () => {
     }
   }, [players]);
 
-
   const saveToLocalStorage = (players: Player[], counter: number) => {
     localStorage.setItem("players", JSON.stringify(players));
     localStorage.setItem("playerIdCounter", counter.toString());
@@ -79,14 +78,22 @@ export const IndexScreen = () => {
   const resetGame = () => {
     setPlayers([]);
     setPlayerIdCounter(0);
-    saveToLocalStorage([], 0);
+    localStorage.clear();
   };
 
+  // Show shuffle symbol only if round is 1
   const shufflePlayers = () => {
     const shuffled = [...players].sort(() => Math.random() - 0.5);
     setPlayers(shuffled);
     saveToLocalStorage(shuffled, playerIdCounter);
   };
+
+  // Get current round from localStorage
+  const [currentRound, setCurrentRound] = useState<number>(1);
+  useEffect(() => {
+    const storedRound = localStorage.getItem("currentRound");
+    setCurrentRound(storedRound ? parseInt(storedRound, 10) : 1);
+  }, [players]);
 
   const startTournament = () => {
     shufflePlayers();
@@ -123,14 +130,13 @@ export const IndexScreen = () => {
           <h1 className="ml-1 text-2xl">{Math.floor(players.length / 4)}</h1>
         </div>
 
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end space-x-4 items-center relative">
           <a
-            className={`"cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border
-                        px-2 py-3 transition-colors ${
-                          players.length < 1
-                            ? "bg-gray-400 border-gray-400 cursor-not-allowed"
-                            : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"
-                        }`}
+            className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
+              players.length < 1
+                ? "bg-gray-400 border-gray-400 cursor-not-allowed"
+                : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"
+            }`}
             onClick={() => resetGame()}
             aria-disabled={players.length < 1}
           >
@@ -181,6 +187,16 @@ export const IndexScreen = () => {
               🎾
             </span>
           </a>
+          {currentRound === 1 && (
+            <button
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-xl bg-white border border-gray-300 rounded-full px-2 py-1 shadow cursor-pointer z-10"
+              title="Bland spillerne igen"
+              onClick={shufflePlayers}
+              aria-label="Shuffle players"
+            >
+              🔄
+            </button>
+          )}
         </div>
       </div>
 
