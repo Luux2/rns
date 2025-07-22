@@ -298,7 +298,7 @@ export const TournamentScreen = () => {
 
       {currentRound === 1 && (
         <button
-          className="fixed left-2 bottom-2 text-gray-400 opacity-20 hover:opacity-80 text-lg bg-transparent border-none p-0 m-0 z-50"
+          className="fixed left-14 top-2 text-gray-400 opacity-20 hover:opacity-80 text-lg bg-transparent border-none p-0 m-0 z-50"
           style={{ fontWeight: 500, background: "none" }}
           onClick={() => setReshuffleDialogOpen(true)}
           title="Bland spillerne igen"
