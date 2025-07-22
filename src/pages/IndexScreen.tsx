@@ -112,14 +112,14 @@ export const IndexScreen = () => {
   return (
     <>
       <Header />
-      <div className="my-4 flex justify-between mx-5">
-        <div className="flex p-4">
+      <div className="my-4 flex flex-col md:flex-row md:justify-between mx-2 sm:mx-5 gap-4">
+        <div className="flex p-4 justify-center">
           <UserIcon className="h-8 w-8" />
           <h1 className="ml-1 text-2xl">{players.length}</h1>
           <ViewColumnsIcon className="ml-10 h-8 w-8" />
           <h1 className="ml-1 text-2xl">{Math.floor(players.length / 4)}</h1>
         </div>
-        <div className="flex justify-end space-x-4 items-center relative">
+        <div className="flex flex-col gap-4 items-center md:flex-row md:space-x-4 relative">
           <button
             className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
               players.length < 1
@@ -178,7 +178,7 @@ export const IndexScreen = () => {
           </button>
           {currentRound === 1 && (
             <button
-              className="absolute right-0 top-1/2 -translate-y-1/2 text-xl bg-white border border-gray-300 rounded-full px-2 py-1 shadow cursor-pointer z-10"
+              className="md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 text-xl bg-white border border-gray-300 rounded-full px-2 py-1 shadow cursor-pointer z-10"
               title="Bland spillerne igen"
               onClick={shufflePlayers}
               aria-label="Shuffle players"
@@ -190,8 +190,7 @@ export const IndexScreen = () => {
       </div>
       <div
         ref={listRef}
-        className="flex-col p-4 overflow-y-auto pb-4"
-        style={{ maxHeight: "calc(100vh - 370px)" }}
+        className="flex-col p-4 overflow-y-auto pb-4 h-[calc(100vh-480px)] md:h-[calc(100vh-320px)]"
       >
         {players.map((player) => (
           <div
@@ -240,3 +239,5 @@ export const IndexScreen = () => {
     </>
   );
 };
+
+export default IndexScreen;

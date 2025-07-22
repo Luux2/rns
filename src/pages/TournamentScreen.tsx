@@ -7,6 +7,8 @@ import {
   ArrowLeftStartOnRectangleIcon,
   ArrowRightIcon,
   HashtagIcon,
+  ListBulletIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
@@ -43,6 +45,7 @@ export const TournamentScreen = () => {
     return stored ? parseInt(stored, 10) : 1;
   });
 
+  const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
@@ -281,7 +284,7 @@ export const TournamentScreen = () => {
 
       {reshuffleDialogOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col gap-4 w-80">
+          <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col gap-4 w-full max-w-sm mx-4">
             <h2 className="text-xl font-bold text-black">Reshuffle 1. runde</h2>
             <label className="text-black">Adgangskode:</label>
             <input
@@ -315,16 +318,17 @@ export const TournamentScreen = () => {
 
       <Animation>
         <Header />
-        <div className="grid grid-cols-[75%_25%]">
-          <div className="col-span-1">
-            <div className="mb-3 mx-1 px-2 py-0.5 border rounded border-gray-500 flex justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-[75%_25%]">
+          {/* ----- MATCHES COLUMN ----- */}
+          <div
+            className={`${leaderboardVisible ? "hidden" : "block"} md:block`}
+          >
+            <div className="mb-3 mx-1 px-2 py-0.5 border rounded border-gray-500 flex flex-col text-center gap-1 text-xs md:text-sm md:flex-row md:justify-between">
               <h1 className="font-semibold">🔝 Venstre par server først</h1>
-              <h1 className="text-center font-semibold">
-                ☕️ Altid gratis kaffe
-              </h1>
+              <h1 className="font-semibold">☕️ Altid gratis kaffe</h1>
               <h1 className="font-semibold">♻️ Husk bolde - begge veje</h1>
             </div>
-            <div className="flex justify-between px-6">
+            <div className="flex justify-between px-6 items-center">
               <div className="h-8 w-8"></div>
               <h1 className="text-2xl font-bold mb-3 animate-pulse">
                 Runde {currentRound}
@@ -340,13 +344,9 @@ export const TournamentScreen = () => {
               />
             </div>
             <div
-              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid ${
-                matches.length <= 4
-                  ? "grid-cols-1"
-                  : matches.length <= 8
-                  ? "grid-cols-2"
-                  : "grid-cols-3"
-              }`}
+              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid grid-cols-1 ${
+                matches.length > 4 ? "md:grid-cols-2" : ""
+              } ${matches.length > 8 ? "lg:grid-cols-3" : ""}`}
             >
               <AnimatePresence>
                 {matches.map((match, index) => {
@@ -374,36 +374,57 @@ export const TournamentScreen = () => {
               </AnimatePresence>
             </div>
           </div>
+
+          {/* ----- LEADERBOARD COLUMN ----- */}
           <div>
-            <Leaderboard />
+            {/* Mobile Modal View */}
+            <div
+              className={`${
+                leaderboardVisible
+                  ? "fixed inset-0 bg-black/60 z-20 flex items-start justify-center p-4"
+                  : "hidden"
+              } md:hidden`}
+            >
+              <div className="bg-gray-900 rounded-lg shadow-xl h-[85vh] w-full max-w-md flex flex-col relative p-2 mt-8">
+                <Leaderboard />
+                <button
+                  className="absolute top-2 right-2 z-30 bg-red-500 rounded-full p-1 shadow-lg"
+                  onClick={() => setLeaderboardVisible(false)}
+                >
+                  <XMarkIcon className="h-5 w-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop Static View */}
+            <div className="hidden md:block">
+              <Leaderboard />
+            </div>
           </div>
         </div>
       </Animation>
 
-      {/* Dialogs */}
       {isStartDialogOpen && (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white text-black p-4 rounded-lg shadow-lg max-w-4xl">
-            <h2 className="text-3xl font-bold mb-4">
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
+          <div className="bg-white text-black p-4 rounded-lg shadow-lg w-full max-w-4xl">
+            <h2 className="text-xl md:text-3xl font-bold mb-4">
               Velkommen til Rise 'n Shine ☀️
             </h2>
-            <p className="mb-2 font-semibold text-xl">
-              Mexicano-format - kampgenerering baseret på placering
+            <div className="space-y-2 text-sm md:text-xl font-semibold">
+              <p>Mexicano-format - kampgenerering baseret på placering</p>
+              <p>Bedst á 32 point pr. kamp</p>
+              <p>2x4 server pr. spiller</p>
+              <p>
+                Parret til venstre starter med serven og tager bolde med ud.
+              </p>
+              <p>Efter sidste runde bedes I tage boldene med tilbage.</p>
+              <p className="pt-2">
+                Hvis appen ikke virker er det nok Jens' skyld.
+              </p>
+            </div>
+            <p className="my-4 font-semibold text-2xl md:text-4xl">
+              God fornøjelse!
             </p>
-            <p className="mb-2 font-semibold text-xl">
-              Bedst á 32 point pr. kamp
-            </p>
-            <p className="mb-2 font-semibold text-xl">2x4 server pr. spiller</p>
-            <p className="mb-2 font-semibold text-xl">
-              Parret til venstre starter med serven og tager bolde med ud.
-            </p>
-            <p className="mb-2 font-semibold text-xl">
-              Efter sidste runde bedes I tage boldene med tilbage.
-            </p>
-            <p className="mb-4 font-semibold text-xl">
-              Hvis appen ikke virker er det nok Jens' skyld.
-            </p>
-            <p className="mb-4 font-semibold text-4xl">God fornøjelse!</p>
             <div className="flex justify-end">
               <button
                 className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
@@ -418,17 +439,17 @@ export const TournamentScreen = () => {
 
       <AnimatePresence>
         {isDialogOpen && (
-          <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-50">
-            <div className="bg-white text-black p-6 rounded-lg shadow-lg">
-              <h2 className="text-lg font-bold mb-4">
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
+            <div className="bg-white text-black p-4 rounded-lg shadow-lg w-full max-w-md">
+              <h2 className="text-base md:text-lg font-bold mb-4">
                 Vælg point for hold:{" "}
                 {currentTeam.map((player) => player.name).join(" & ")}
               </h2>
-              <div className="grid grid-cols-8 gap-2">
+              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
                 {Array.from({ length: 33 }, (_, i) => (
                   <button
                     key={i}
-                    className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono"
+                    className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono text-sm"
                     onClick={() =>
                       updateTeamPoints(currentTeam, opponentTeam, i)
                     }
@@ -457,15 +478,24 @@ export const TournamentScreen = () => {
       </AnimatePresence>
 
       {sitovers.length > 0 && (
-        <div className="animate-pulse fixed bottom-0 left-1/3 transform -translate-x-1/2 flex justify-center items-center py-2">
-          <h2 className="text-lg font-bold text-red-500">
-            Sidder over (16 point):
+        <div className="animate-pulse fixed bottom-16 md:bottom-2 left-1/2 -translate-x-1/2 w-full max-w-md text-center bg-gray-900 bg-opacity-70 rounded-md p-1">
+          <h2 className="text-base md:text-lg font-bold text-red-500 inline">
+            Sidder over:
           </h2>
-          <p className="text-xl ml-2">
+          <p className="text-base md:text-xl ml-2 inline">
             {sitovers.map((player) => player.name).join(", ")}
           </p>
         </div>
       )}
+
+      <button
+        className="md:hidden fixed bottom-4 right-4 bg-sky-500 rounded-full p-3 shadow-lg z-10"
+        onClick={() => setLeaderboardVisible(true)}
+      >
+        <ListBulletIcon className="h-6 w-6 text-white" />
+      </button>
     </>
   );
 };
+
+export default TournamentScreen;

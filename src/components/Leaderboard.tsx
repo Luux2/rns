@@ -68,7 +68,7 @@ const Leaderboard = () => {
   return (
     <div
       ref={containerRef}
-      className="h-[calc(100vh-180px)] mr-1 overflow-y-auto cursor-pointer"
+      className="h-full w-full overflow-y-auto cursor-pointer md:h-[calc(100vh-180px-2.5rem)] md:mr-1"
       onClick={toggleScrolling}
       data-scroll-direction="down"
     >
@@ -78,7 +78,7 @@ const Leaderboard = () => {
         <h2 className="text-lg text-center font-bold pl-2">P</h2>
       </div>
 
-      <div className="mt-2 space-y-2">
+      <div className="mt-2 space-y-2 p-1">
         {sortedPlayers.map((player, index) => (
           <div
             key={player.id}
