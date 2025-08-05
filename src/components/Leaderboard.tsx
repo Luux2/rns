@@ -1,25 +1,30 @@
 import { useEffect, useRef, useState, useMemo } from "react";
-import { usePlayerContext } from "../context/PlayerContext.tsx";
+import { Player } from "../interfaces/interfaces.ts";
 
-const Leaderboard = () => {
-  const { players } = usePlayerContext();
+const Leaderboard = ({ players }: { players: Player[] }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isScrolling, setIsScrolling] = useState(true);
 
   const sortedPlayers = useMemo(
     () =>
-      [...players].sort((a, b) => {
-        if (b.points !== a.points) {
-          return b.points - a.points;
-        }
-        if (b.wins !== a.wins) {
-          return b.wins - a.wins;
-        }
-        if (a.losses !== b.losses) {
-          return a.losses - b.losses;
-        }
-        return b.draws - a.draws;
-      }),
+      [...players]
+        .map((p) => ({
+          ...p,
+          // Calculate live points for sorting and display
+          livePoints: p.points + p.roundPoints,
+        }))
+        .sort((a, b) => {
+          if (b.livePoints !== a.livePoints) {
+            return b.livePoints - a.livePoints;
+          }
+          if (b.wins !== a.wins) {
+            return b.wins - a.wins;
+          }
+          if (a.losses !== b.losses) {
+            return a.losses - b.losses;
+          }
+          return b.draws - a.draws;
+        }),
     [players]
   );
 
@@ -110,7 +115,7 @@ const Leaderboard = () => {
             <h3 className="text-black text-center">
               {player.wins}-{player.draws}-{player.losses}
             </h3>
-            <h3 className="text-black text-center">{player.points}</h3>
+            <h3 className="text-black text-center">{player.livePoints}</h3>
           </div>
         ))}
       </div>

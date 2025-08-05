@@ -5,8 +5,9 @@ import {
   UserIcon,
   ViewColumnsIcon,
   XMarkIcon,
+  ClockIcon,
 } from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { usePlayerContext } from "../context/PlayerContext.tsx";
 import { Player } from "../interfaces/interfaces.ts";
 
@@ -75,39 +76,17 @@ export const IndexScreen = () => {
     localStorage.clear();
   };
 
-  const resetScores = () => {
-    const resetPlayers = players.map((player) => ({
-      ...player,
-      roundPoints: 0,
-      points: 0,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      currentRoundScore: 0,
-      isRoundFinalized: false,
-      timeSatOut: 0,
-    }));
-    setPlayers(resetPlayers);
-    localStorage.setItem("players", JSON.stringify(resetPlayers));
-    localStorage.removeItem("currentRound");
-    localStorage.removeItem("tournamentStarted");
-  };
-
-  const shufflePlayers = () => {
-    const shuffled = [...players].sort(() => Math.random() - 0.5);
-    setPlayers(shuffled);
-    saveToLocalStorage(shuffled, playerIdCounter);
-  };
-
-  const [currentRound, setCurrentRound] = useState<number>(1);
-  useEffect(() => {
-    const storedRound = localStorage.getItem("currentRound");
-    setCurrentRound(storedRound ? parseInt(storedRound, 10) : 1);
-  }, []);
-
-  const startTournament = () => {
-    shufflePlayers();
-    navigate("/turnering");
+  const startTournament = async () => {
+    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
+    const response = await fetch("/api/tournaments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ players: shuffledPlayers }),
+    });
+    const tournament = await response.json();
+    navigate(`/turnering/${tournament.id}`);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -138,34 +117,17 @@ export const IndexScreen = () => {
           <h1 className="ml-1 text-2xl">{Math.floor(players.length / 4)}</h1>
         </div>
         <div className="flex flex-col gap-4 items-center md:flex-row md:space-x-4 relative">
-          <button
-            className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
-              players.length < 1
-                ? "bg-gray-400 border-gray-400 cursor-not-allowed"
-                : "bg-orange-500 hover:bg-transparent border-orange-500 focus:outline-none focus:ring"
-            }`}
-            onClick={() => resetScores()}
-            disabled={players.length < 1}
+          <Link
+            to="/finished"
+            className="cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors bg-gray-500 hover:bg-transparent border-gray-500 focus:outline-none focus:ring"
           >
-            <span
-              className={`font-medium ${
-                players.length < 1
-                  ? "text-gray-600"
-                  : "cursor-pointer group-hover:text-orange-500 group-active:text-orange-500"
-              }`}
-            >
-              Nulstil Stilling
+            <span className="font-medium cursor-pointer group-hover:text-gray-500 group-active:text-gray-500">
+              Past Tournaments
             </span>
-            <span
-              className={`shrink-0 rounded-full border p-2 ${
-                players.length < 1
-                  ? "border-gray-600 text-gray-600"
-                  : "border-current bg-white text-orange-500 group-active:text-orange-500"
-              }`}
-            >
-              🔄
+            <span className="shrink-0 rounded-full border border-current bg-white p-2 text-gray-500 group-active:text-gray-500">
+              <ClockIcon className="h-4 w-4" />
             </span>
-          </button>
+          </Link>
           <button
             className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
               players.length < 1
@@ -222,16 +184,6 @@ export const IndexScreen = () => {
               🎾
             </span>
           </button>
-          {currentRound === 1 && (
-            <button
-              className="md:absolute md:right-0 md:top-1/2 md:-translate-y-1/2 text-xl bg-white border border-gray-300 rounded-full px-2 py-1 shadow cursor-pointer z-10"
-              title="Bland spillerne igen"
-              onClick={shufflePlayers}
-              aria-label="Shuffle players"
-            >
-              🔄
-            </button>
-          )}
         </div>
       </div>
       <div
