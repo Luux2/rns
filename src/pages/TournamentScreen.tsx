@@ -472,9 +472,9 @@ export const TournamentScreen = () => {
       </Animation>
 
       {isStartDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4 m-4">
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-700">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-sky-400">
+            <h2 className="text-3xl md:text-5xl font-bold pb-4 mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-orange-400">
               Velkommen til Rise 'n Shine ☀️
             </h2>
             <div className="space-y-4 text-base md:text-lg">
@@ -503,7 +503,7 @@ export const TournamentScreen = () => {
                   ☕️
                 </span>
                 <p>
-                  Drik alt det kaffe I vil ☕️ – hvis kanden er tom eller ved at
+                  Drik alt det kaffe I vil – hvis kanden er tom eller ved at
                   være lav, så sig det til Jens!
                 </p>
               </div>
@@ -532,37 +532,88 @@ export const TournamentScreen = () => {
 
       <AnimatePresence>
         {isDialogOpen && (
-          <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
-            <div className="bg-white text-black p-4 rounded-lg shadow-lg w-full max-w-md">
-              <h2 className="text-base md:text-lg font-bold mb-4">
-                Vælg point for hold:{" "}
-                {currentTeam.map((player) => player.name).join(" & ")}
+          <div className="fixed inset-0 z-30 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4">
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-700">
+              <h2 className="text-3xl font-bold mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-orange-400">
+                Indtast point for:{" "}
+                <span className="block mt-2 text-2xl font-medium text-gray-300">
+                  {currentTeam.map((player) => player.name).join(" & ")}
+                </span>
               </h2>
-              <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                {Array.from({ length: 33 }, (_, i) => (
-                  <button
-                    key={i}
-                    className="bg-gray-300 hover:bg-gray-400 p-2 rounded-lg font-mono text-sm"
-                    onClick={() =>
-                      updateTeamPoints(currentTeam, opponentTeam, i)
-                    }
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-semibold text-center mb-3 text-green-400">
+                    Vinder Point
+                  </h3>
+                  <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                    {Array.from({ length: 16 }, (_, i) => 17 + i).map(
+                      (point) => (
+                        <button
+                          key={point}
+                          className="bg-gray-700 hover:bg-green-600 active:bg-green-700 p-3 rounded-lg font-bold text-xl aspect-square flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+                          onClick={() =>
+                            updateTeamPoints(currentTeam, opponentTeam, point)
+                          }
+                        >
+                          {point}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+
+                <div className="relative py-4">
+                  <div
+                    className="absolute inset-0 flex items-center"
+                    aria-hidden="true"
                   >
-                    {i}
-                  </button>
-                ))}
+                    <div className="w-full border-t border-gray-600" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <button
+                      className="px-8 py-3 bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700 rounded-xl font-bold text-2xl transition-all duration-200 transform hover:scale-110"
+                      onClick={() =>
+                        updateTeamPoints(currentTeam, opponentTeam, 16)
+                      }
+                    >
+                      Uafgjort (16)
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-semibold text-center mb-3 text-red-400">
+                    Taber Point
+                  </h3>
+                  <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+                    {Array.from({ length: 16 }, (_, i) => i).map((point) => (
+                      <button
+                        key={point}
+                        className="bg-gray-700 hover:bg-red-600 active:bg-red-700 p-3 rounded-lg font-bold text-xl aspect-square flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+                        onClick={() =>
+                          updateTeamPoints(currentTeam, opponentTeam, point)
+                        }
+                      >
+                        {point}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between mt-4">
+
+              <div className="flex justify-center mt-10 gap-4">
                 <button
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                  className="bg-gray-600 text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-gray-700 active:bg-gray-800 transition-colors"
                   onClick={closeDialog}
                 >
                   Annuller
                 </button>
                 <button
-                  className="bg-orange-500 text-white px-4 py-2 rounded-lg"
+                  className="bg-red-800 text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-red-900 active:bg-red-950 transition-colors"
                   onClick={resetPoints}
                 >
-                  Nulstil
+                  Nulstil Point
                 </button>
               </div>
             </div>
