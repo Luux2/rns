@@ -69,10 +69,28 @@ export const IndexScreen = () => {
     return newName;
   };
 
-  const resetGame = () => {
+  const resetAll = () => {
     setPlayers([]);
     setPlayerIdCounter(0);
     localStorage.clear();
+  };
+
+  const resetScores = () => {
+    const resetPlayers = players.map((player) => ({
+      ...player,
+      roundPoints: 0,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      currentRoundScore: 0,
+      isRoundFinalized: false,
+      timeSatOut: 0,
+    }));
+    setPlayers(resetPlayers);
+    localStorage.setItem("players", JSON.stringify(resetPlayers));
+    localStorage.removeItem("currentRound");
+    localStorage.removeItem("tournamentStarted");
   };
 
   const shufflePlayers = () => {
@@ -124,9 +142,37 @@ export const IndexScreen = () => {
             className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
               players.length < 1
                 ? "bg-gray-400 border-gray-400 cursor-not-allowed"
+                : "bg-orange-500 hover:bg-transparent border-orange-500 focus:outline-none focus:ring"
+            }`}
+            onClick={() => resetScores()}
+            disabled={players.length < 1}
+          >
+            <span
+              className={`font-medium ${
+                players.length < 1
+                  ? "text-gray-600"
+                  : "cursor-pointer group-hover:text-orange-500 group-active:text-orange-500"
+              }`}
+            >
+              Nulstil Stilling
+            </span>
+            <span
+              className={`shrink-0 rounded-full border p-2 ${
+                players.length < 1
+                  ? "border-gray-600 text-gray-600"
+                  : "border-current bg-white text-orange-500 group-active:text-orange-500"
+              }`}
+            >
+              🔄
+            </span>
+          </button>
+          <button
+            className={`cursor-pointer h-16 w-48 group flex items-center justify-between gap-4 rounded-lg border px-2 py-3 transition-colors ${
+              players.length < 1
+                ? "bg-gray-400 border-gray-400 cursor-not-allowed"
                 : "bg-red-500 hover:bg-transparent border-red-500 focus:outline-none focus:ring"
             }`}
-            onClick={() => resetGame()}
+            onClick={() => resetAll()}
             disabled={players.length < 1}
           >
             <span
@@ -136,7 +182,7 @@ export const IndexScreen = () => {
                   : "cursor-pointer group-hover:text-red-500 group-active:text-red-500"
               }`}
             >
-              Nulstil
+              Nulstil Alt
             </span>
             <span
               className={`shrink-0 rounded-full border p-2 ${

@@ -9,6 +9,8 @@ import {
   HashtagIcon,
   ListBulletIcon,
   XMarkIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Player } from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
@@ -49,8 +51,10 @@ export const TournamentScreen = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
-  const [isStartDialogOpen, setIsStartDialogOpen] = useState(false);
-  const [courtMode, setCourtMode] = useState<"default" | "alt" | "full">("default");
+  const [isStartDialogOpen, setIsStartDialogOpen] = useState(true);
+  const [courtMode, setCourtMode] = useState<"default" | "alt" | "full">(
+    "default"
+  );
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
   const [reshuffleDialogOpen, setReshuffleDialogOpen] = useState(false);
   const [reshufflePassword, setReshufflePassword] = useState("");
@@ -116,6 +120,16 @@ export const TournamentScreen = () => {
   const handleNextRound = useCallback(() => {
     if (!allMatchesHaveScores) return;
 
+    const partnerMap = new Map<number, number>();
+    matches.forEach((match) => {
+      if (match.length === 4 && match[0].roundPoints === 16) {
+        partnerMap.set(match[0].id, match[2].id);
+        partnerMap.set(match[2].id, match[0].id);
+        partnerMap.set(match[1].id, match[3].id);
+        partnerMap.set(match[3].id, match[1].id);
+      }
+    });
+
     const finalizedScores = playerScores.map((player) => {
       const isSitover = sitovers.some((s) => s.id === player.id);
       const pointsForRound = isSitover ? 16 : player.roundPoints;
@@ -136,9 +150,19 @@ export const TournamentScreen = () => {
       return updatedPlayer;
     });
 
-    const sortedPlayers = [...finalizedScores].sort(
-      (a, b) => b.points - a.points
-    );
+    const sortedPlayers = [...finalizedScores].sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      if (b.wins !== a.wins) {
+        return b.wins - a.wins;
+      }
+      if (a.losses !== b.losses) {
+        return a.losses - b.losses;
+      }
+      return b.draws - a.draws;
+    });
+
     const { sitovers: nextSitovers } = selectNextSitovers(sortedPlayers);
 
     const playersWithUpdatedSitoutCount = sortedPlayers.map((p) =>
@@ -150,11 +174,28 @@ export const TournamentScreen = () => {
     const playingNextRound = playersWithUpdatedSitoutCount.filter(
       (p) => !nextSitovers.some((s) => s.id === p.id)
     );
+
+    // Shuffle partners who had a draw
+    for (let i = 0; i < playingNextRound.length; i += 4) {
+      if (i + 3 < playingNextRound.length) {
+        const p1 = playingNextRound[i];
+        const p3 = playingNextRound[i + 2];
+
+        // Check if p1 and p3 were partners in a tied match
+        if (partnerMap.get(p1.id) === p3.id) {
+          // Swap p3 and p4 to break the pair
+          const p4 = playingNextRound[i + 3];
+          playingNextRound[i + 2] = p4;
+          playingNextRound[i + 3] = p3;
+        }
+      }
+    }
+
     const nextRoundPlayerOrder = [...playingNextRound, ...nextSitovers];
 
     setPlayerScores(nextRoundPlayerOrder);
     setCurrentRound((prev) => prev + 1);
-  }, [playerScores, sitovers, allMatchesHaveScores]);
+  }, [playerScores, sitovers, allMatchesHaveScores, matches]);
 
   const handleExit = () => navigate("/");
 
@@ -257,16 +298,15 @@ export const TournamentScreen = () => {
     "Bane 7",
     "Bane 13",
     "Bane 15",
-      "Bane 16"
+    "Bane 16",
   ]);
 
   const currentCourts =
-      courtMode === "default"
-          ? courtNumbers
-          : courtMode === "alt"
-              ? courtNumbers2
-              : courtNumbersFull;
-
+    courtMode === "default"
+      ? courtNumbers
+      : courtMode === "alt"
+      ? courtNumbers2
+      : courtNumbersFull;
 
   return (
     <>
@@ -287,12 +327,12 @@ export const TournamentScreen = () => {
           onClick={() => setExitDialogVisible(true)}
         />
         <HashtagIcon
-            className="h-8 w-8 cursor-pointer"
-            onClick={() => {
-              setCourtMode((prev) =>
-                  prev === "default" ? "alt" : prev === "alt" ? "full" : "default"
-              );
-            }}
+          className="h-8 w-8 cursor-pointer"
+          onClick={() => {
+            setCourtMode((prev) =>
+              prev === "default" ? "alt" : prev === "alt" ? "full" : "default"
+            );
+          }}
         />
       </div>
 
@@ -370,25 +410,29 @@ export const TournamentScreen = () => {
               />
             </div>
             <div
-              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid grid-cols-1 ${matches.length > 12
+              className={`mx-1 gap-x-1.5 gap-y-10 mt-4 top-4 grid grid-cols-1 ${
+                matches.length > 12
                   ? "grid-cols-3"
                   : matches.length > 8
-                      ? "lg:grid-cols-3"
-                      : matches.length > 4
-                          ? "md:grid-cols-2"
-                          : "grid-cols-1"}`}
+                  ? "lg:grid-cols-3"
+                  : matches.length > 4
+                  ? "md:grid-cols-2"
+                  : "grid-cols-1"
+              }`}
             >
               <AnimatePresence>
                 {matches.map((match, index) => {
                   const matchKey = match.map((p) => p.id).join("-");
                   const courtName =
                     matches.length < 9
-                      ? currentCourts.filter((court: any) => court !== "Bane 1")[
-                          index % (currentCourts.length - 1)
-                        ]
+                      ? currentCourts.filter(
+                          (court: any) => court !== "Bane 1"
+                        )[index % (currentCourts.length - 1)]
                       : currentCourts[index % currentCourts.length];
                   const isSpecialLayout =
-                    (matches.length === 9 || matches.length === 10 || matches.length === 13) &&
+                    (matches.length === 9 ||
+                      matches.length === 10 ||
+                      matches.length === 13) &&
                     index === 0;
 
                   return (
@@ -435,29 +479,55 @@ export const TournamentScreen = () => {
       </Animation>
 
       {isStartDialogOpen && (
-        <div className="fixed inset-0 z-20 flex items-center justify-center bg-gray-900 bg-opacity-50 p-4">
-          <div className="bg-white text-black p-4 rounded-lg shadow-lg w-full max-w-4xl">
-            <h2 className="text-xl md:text-3xl font-bold mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-700">
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-sky-400">
               Velkommen til Rise 'n Shine ☀️
             </h2>
-            <div className="space-y-2 text-sm md:text-xl font-semibold">
-              <p>Mexicano-format - kampgenerering baseret på placering</p>
-              <p>Bedst á 32 point pr. kamp</p>
-              <p>2x4 server pr. spiller</p>
-              <p>
-                Parret til venstre starter med serven og tager bolde med ud.
-              </p>
-              <p>Efter sidste runde bedes I tage boldene med tilbage.</p>
-              <p className="pt-2">
-                Hvis appen ikke virker er det nok Jens' skyld.
-              </p>
+            <div className="space-y-4 text-base md:text-lg">
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-400" />
+                <p>Mexicano-format - kampe baseret på point og vundne kampe.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-400" />
+                <p>Bedst á 32 point pr. kamp.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-400" />
+                <p>2x4 server pr. spiller.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <CheckCircleIcon className="h-6 w-6 text-green-400" />
+                <p>Venstre par starter med serven og bolde.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400" />
+                <p>Husk at tage bolde med tilbage efter sidste runde.</p>
+              </div>
+              <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
+                <span className="text-2xl" role="img" aria-label="coffee">
+                  ☕️
+                </span>
+                <p>
+                  Drik alt det kaffe I vil ☕️ – hvis kanden er tom eller ved at
+                  være lav, så sig det til Jens!
+                </p>
+              </div>
             </div>
-            <p className="my-4 font-semibold text-2xl md:text-4xl">
+            <p className="mt-8 mb-6 font-semibold text-center text-3xl md:text-4xl text-gray-300">
               God fornøjelse!
             </p>
-            <div className="flex justify-end">
+            <div className="flex justify-center mt-4">
+              <div className="bg-sky-100 border border-sky-300 text-sky-900 rounded-lg px-4 mb-6 py-2 shadow max-w-xl w-full text-center text-sm md:text-base">
+                <strong>Nyhed:</strong> Vi har opdateret shuffle-logikken! Nu
+                tages både sejre og nederlag med i beregningen, og hvis en kamp
+                ender uafgjort, bytter partnerne plads i næste runde.
+              </div>
+            </div>
+            <div className="flex justify-center">
               <button
-                className="bg-green-500 rounded-lg p-2 text-white font-bold mt-4"
+                className="bg-gradient-to-r from-orange-500 to-sky-500 hover:from-orange-600 hover:to-sky-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105"
                 onClick={() => setIsStartDialogOpen(false)}
               >
                 Vamos!

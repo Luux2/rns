@@ -7,7 +7,19 @@ const Leaderboard = () => {
   const [isScrolling, setIsScrolling] = useState(true);
 
   const sortedPlayers = useMemo(
-    () => [...players].sort((a, b) => b.points - a.points),
+    () =>
+      [...players].sort((a, b) => {
+        if (b.points !== a.points) {
+          return b.points - a.points;
+        }
+        if (b.wins !== a.wins) {
+          return b.wins - a.wins;
+        }
+        if (a.losses !== b.losses) {
+          return a.losses - b.losses;
+        }
+        return b.draws - a.draws;
+      }),
     [players]
   );
 
