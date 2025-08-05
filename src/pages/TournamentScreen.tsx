@@ -175,15 +175,12 @@ export const TournamentScreen = () => {
       (p) => !nextSitovers.some((s) => s.id === p.id)
     );
 
-    // Shuffle partners who had a draw
     for (let i = 0; i < playingNextRound.length; i += 4) {
       if (i + 3 < playingNextRound.length) {
         const p1 = playingNextRound[i];
         const p3 = playingNextRound[i + 2];
 
-        // Check if p1 and p3 were partners in a tied match
         if (partnerMap.get(p1.id) === p3.id) {
-          // Swap p3 and p4 to break the pair
           const p4 = playingNextRound[i + 3];
           playingNextRound[i + 2] = p4;
           playingNextRound[i + 3] = p3;
@@ -385,7 +382,6 @@ export const TournamentScreen = () => {
       <Animation>
         <Header />
         <div className="grid grid-cols-1 md:grid-cols-[75%_25%]">
-          {/* ----- MATCHES COLUMN ----- */}
           <div
             className={`${leaderboardVisible ? "hidden" : "block"} md:block`}
           >
@@ -449,9 +445,7 @@ export const TournamentScreen = () => {
             </div>
           </div>
 
-          {/* ----- LEADERBOARD COLUMN ----- */}
           <div>
-            {/* Mobile Modal View */}
             <div
               className={`${
                 leaderboardVisible
@@ -470,8 +464,7 @@ export const TournamentScreen = () => {
               </div>
             </div>
 
-            {/* Desktop Static View */}
-            <div className="hidden md:block">
+            <div className="hidden md:block md:h-[calc(100vh-120px)] md:mr-1">
               <Leaderboard />
             </div>
           </div>

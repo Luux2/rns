@@ -4,6 +4,8 @@ import { usePlayerContext } from "../context/PlayerContext.tsx";
 const Leaderboard = () => {
   const { players } = usePlayerContext();
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationFrameIdRef = useRef<number>();
+  const scrollDirectionRef = useRef<"up" | "down">("down");
   const [isScrolling, setIsScrolling] = useState(true);
 
   const sortedPlayers = useMemo(
@@ -25,53 +27,60 @@ const Leaderboard = () => {
 
   useEffect(() => {
     const scrollContainer = containerRef.current;
-    if (!scrollContainer || !isScrolling) return;
+    if (!scrollContainer || !isScrolling) {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+      return;
+    }
 
-    let animationFrameId: number;
     let lastTime: number | null = null;
-    const scrollSpeed = 0.05;
+    const scrollSpeed = 150;
 
     const autoScroll = (currentTime: number) => {
       if (!containerRef.current) return;
-      if (lastTime === null) {
-        lastTime = currentTime;
-        animationFrameId = requestAnimationFrame(autoScroll);
+
+      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
+
+      if (scrollHeight <= clientHeight) {
         return;
       }
 
-      const deltaTime = currentTime - lastTime;
+      if (lastTime === null) {
+        lastTime = currentTime;
+        animationFrameIdRef.current = requestAnimationFrame(autoScroll);
+        return;
+      }
+
+      const deltaTime = (currentTime - lastTime) / 1000;
       const scrollAmount = scrollSpeed * deltaTime;
 
-      const { scrollTop, scrollHeight, clientHeight } = containerRef.current;
-      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-      const isAtTop = scrollTop <= 1;
-
-      const direction = containerRef.current.dataset.scrollDirection || "down";
-
-      if (direction === "down") {
-        if (isAtBottom) {
-          containerRef.current.dataset.scrollDirection = "up";
+      if (scrollDirectionRef.current === "down") {
+        if (scrollTop + clientHeight >= scrollHeight - 1) {
+          scrollDirectionRef.current = "up";
         } else {
           containerRef.current.scrollTop += scrollAmount;
         }
       } else {
-        if (isAtTop) {
-          containerRef.current.dataset.scrollDirection = "down";
+        if (scrollTop <= 1) {
+          scrollDirectionRef.current = "down";
         } else {
           containerRef.current.scrollTop -= scrollAmount;
         }
       }
 
       lastTime = currentTime;
-      animationFrameId = requestAnimationFrame(autoScroll);
+      animationFrameIdRef.current = requestAnimationFrame(autoScroll);
     };
 
-    animationFrameId = requestAnimationFrame(autoScroll);
+    animationFrameIdRef.current = requestAnimationFrame(autoScroll);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
     };
-  }, [isScrolling]);
+  }, [isScrolling, sortedPlayers]);
 
   const toggleScrolling = () => {
     setIsScrolling((prev) => !prev);
@@ -80,9 +89,8 @@ const Leaderboard = () => {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-auto cursor-pointer md:h-[calc(100vh-120px)] md:mr-1"
+      className="h-full w-full overflow-y-auto cursor-pointer"
       onClick={toggleScrolling}
-      data-scroll-direction="down"
     >
       <div className="grid grid-cols-[55%_30%_15%] rounded border border-gray-500 sticky top-0 bg-gray-900 z-10">
         <div></div>
