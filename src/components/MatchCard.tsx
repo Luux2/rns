@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Player } from "../interfaces/interfaces.ts";
-import gif from "../assets/fire.gif";
+//import gif from "../assets/fire.gif";
 import christmasGif from "../assets/christmasgif2.gif";
 
 interface MatchCardProps {
