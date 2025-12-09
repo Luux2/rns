@@ -38,6 +38,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
   const team1 = [match[0], match[2]].filter(Boolean);
   const team2 = [match[1], match[3]].filter(Boolean);
 
+  //SKIFT EFTER JUL *from-orange-500 via-yellow-300 to-sky-300
   return (
     <motion.div
       layout
@@ -47,7 +48,7 @@ const MatchCard: React.FC<MatchCardProps> = ({
       exit="exit"
       transition={transitionSettings}
       className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t 
-      {/*from-orange-500 via-yellow-300 to-sky-300*/} from-white via-red-300 to-red-600
+      from-white via-red-300 to-red-600
       ${isSpecialLayout ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
       style={
         isHighScore
