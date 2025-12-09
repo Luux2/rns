@@ -89,7 +89,7 @@ const Leaderboard = () => {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-auto cursor-pointer"
+      className="h-[calc(100vh-200px)] w-full overflow-y-auto cursor-pointer"
       onClick={toggleScrolling}
     >
       <div className="grid grid-cols-[55%_30%_15%] rounded border border-gray-500 sticky top-0 bg-gray-900 z-10">

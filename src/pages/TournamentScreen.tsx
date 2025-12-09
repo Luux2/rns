@@ -52,9 +52,7 @@ export const TournamentScreen = () => {
   const [currentTeam, setCurrentTeam] = useState<Player[]>([]);
   const [opponentTeam, setOpponentTeam] = useState<Player[]>([]);
   const [isStartDialogOpen, setIsStartDialogOpen] = useState(true);
-  const [courtMode, setCourtMode] = useState<"default" | "alt" | "full">(
-    "default"
-  );
+    const [courtMode, setCourtMode] = useState<"default" | "alt" | "full" | "broken">("default");
   const [exitDialogVisible, setExitDialogVisible] = useState(false);
   const [reshuffleDialogOpen, setReshuffleDialogOpen] = useState(false);
   const [reshufflePassword, setReshufflePassword] = useState("");
@@ -298,12 +296,29 @@ export const TournamentScreen = () => {
     "Bane 16",
   ]);
 
+    const [brokenCourtNumbers] = useState<string[]>([
+        "Bane 8",
+        "Bane 10",
+        "Bane 11",
+        "Bane 12",
+        "Bane 1",
+        "Bane 2",
+        "Bane 3",
+        "Bane 4",
+        "Bane 7",
+        "Bane 13",
+        "Bane 15",
+        "Bane 16",
+    ]);
+
   const currentCourts =
-    courtMode === "default"
-      ? courtNumbers
-      : courtMode === "alt"
-      ? courtNumbers2
-      : courtNumbersFull;
+      courtMode === "default"
+          ? courtNumbers
+          : courtMode === "alt"
+              ? courtNumbers2
+              : courtMode === "full"
+                  ? courtNumbersFull
+                  : brokenCourtNumbers;
 
   return (
     <>
@@ -326,9 +341,15 @@ export const TournamentScreen = () => {
         <HashtagIcon
           className="h-8 w-8 cursor-pointer"
           onClick={() => {
-            setCourtMode((prev) =>
-              prev === "default" ? "alt" : prev === "alt" ? "full" : "default"
-            );
+              setCourtMode(prev =>
+                  prev === "default"
+                      ? "alt"
+                      : prev === "alt"
+                          ? "full"
+                          : prev === "full"
+                              ? "broken"
+                              : "default"
+              );
           }}
         />
       </div>
@@ -472,7 +493,7 @@ export const TournamentScreen = () => {
       </Animation>
 
       {isStartDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 p-4 m-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75">
           <div className="bg-gradient-to-br from-gray-800 to-gray-900 text-white p-6 rounded-2xl shadow-2xl w-full max-w-4xl border border-gray-700">
             <h2 className="text-3xl md:text-5xl font-bold pb-4 mb-6 text-center text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-orange-400">
               Velkommen til Rise 'n Shine ☀️
@@ -492,7 +513,7 @@ export const TournamentScreen = () => {
               </div>
               <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
                 <CheckCircleIcon className="h-6 w-6 text-green-400" />
-                <p>Venstre par starter med serven og bolde.</p>
+                <p>Venstre par starter med serven og tager bolde med til banen.</p>
               </div>
               <div className="flex items-center gap-4 bg-gray-800 p-3 rounded-lg">
                 <ExclamationTriangleIcon className="h-6 w-6 text-yellow-400" />
@@ -511,13 +532,6 @@ export const TournamentScreen = () => {
             <p className="mt-8 mb-6 font-semibold text-center text-3xl md:text-4xl text-gray-300">
               God fornøjelse!
             </p>
-            <div className="flex justify-center mt-4">
-              <div className="bg-sky-100 border border-sky-300 text-sky-900 rounded-lg px-4 mb-6 py-2 shadow max-w-xl w-full text-center text-sm md:text-base">
-                <strong>Nyhed:</strong> Vi har opdateret shuffle-logikken! Nu
-                tages både sejre og nederlag med i beregningen, og hvis en kamp
-                ender uafgjort, bytter partnerne plads i næste runde.
-              </div>
-            </div>
             <div className="flex justify-center">
               <button
                 className="bg-gradient-to-r from-orange-500 to-sky-500 hover:from-orange-600 hover:to-sky-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-transform hover:scale-105"
