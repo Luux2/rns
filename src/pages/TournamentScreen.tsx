@@ -1,6 +1,6 @@
 import { usePlayerContext } from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import {useState, useEffect, useMemo, useCallback, useRef} from "react";
 import { useNavigate } from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
@@ -58,7 +58,11 @@ export const TournamentScreen = () => {
   const [reshufflePassword, setReshufflePassword] = useState("");
   const [reshuffleError, setReshuffleError] = useState("");
 
-  useEffect(() => {
+    const christmasCourtIndexByRound = useRef<Record<number, number>>({});
+    const [christmasCourtIndex, setChristmasCourtIndex] = useState<number | null>(null);
+
+
+    useEffect(() => {
     localStorage.setItem("players", JSON.stringify(playerScores));
     setPlayers(playerScores);
   }, [playerScores, setPlayers]);
@@ -252,6 +256,23 @@ export const TournamentScreen = () => {
     closeDialog();
   }, [currentTeam, opponentTeam, closeDialog]);
 
+    useEffect(() => {
+        // Hvis der ikke er nogen kampe, så ingen julebane
+        if (matches.length === 0) {
+            setChristmasCourtIndex(null);
+            return;
+        }
+
+        // “Lås” valget pr. runde, så den ikke ændrer sig ved re-renders
+        if (christmasCourtIndexByRound.current[currentRound] == null) {
+            christmasCourtIndexByRound.current[currentRound] = Math.floor(
+                Math.random() * matches.length
+            );
+        }
+
+        setChristmasCourtIndex(christmasCourtIndexByRound.current[currentRound]);
+    }, [currentRound, matches.length]);
+
   const [courtNumbers] = useState<string[]>([
     "Bane 8",
     "Bane 9",
@@ -438,21 +459,28 @@ export const TournamentScreen = () => {
               }`}
             >
               <AnimatePresence>
-                {matches.map((match, index) => {
-                  const matchKey = match.map((p) => p.id).join("-");
-                  const courtName =
-                    matches.length < 9
-                      ? currentCourts.filter(
-                          (court: any) => court !== "Bane 1"
-                        )[index % (currentCourts.length - 1)]
-                      : currentCourts[index % currentCourts.length];
-                  const isSpecialLayout =
-                    (matches.length === 9 ||
-                      matches.length === 10 ||
-                      matches.length === 13) &&
-                    index === 0;
+                  {matches.map((match, index) => {
+                      const matchKey = match.map((p) => p.id).join("-");
 
-                  return (
+                      const courtNameBase =
+                          matches.length < 9
+                              ? currentCourts.filter((court: any) => court !== "Bane 1")[
+                              index % (currentCourts.length - 1)
+                                  ]
+                              : currentCourts[index % currentCourts.length];
+
+                      const courtName =
+                          index === christmasCourtIndex ? `${courtNameBase} 🎄` : courtNameBase;
+
+                      const isSpecialLayout =
+                          (matches.length === 9 ||
+                              matches.length === 10 ||
+                              matches.length === 13) &&
+                          index === 0;
+
+
+
+                      return (
                     <MatchCard
                       key={matchKey}
                       match={match}
@@ -529,6 +557,9 @@ export const TournamentScreen = () => {
                 </p>
               </div>
             </div>
+              <p className="mt-8 mb-6 font-semibold text-center italic md:text-xl text-gray-300">
+                  Har du en Android-telefon? Henvend dig til Jens!
+              </p>
             <p className="mt-8 mb-6 font-semibold text-center text-3xl md:text-4xl text-gray-300">
               God fornøjelse!
             </p>
