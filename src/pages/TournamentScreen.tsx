@@ -1,25 +1,22 @@
-import { usePlayerContext } from "../context/PlayerContext";
+import {usePlayerContext} from "../context/PlayerContext";
 import Header from "../components/Header.tsx";
-import {useState, useEffect, useMemo, useCallback, useRef} from "react";
-import { useNavigate } from "react-router-dom";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {useNavigate} from "react-router-dom";
 import Animation from "../components/Animation.tsx";
 import {
-  ArrowLeftStartOnRectangleIcon,
-  ArrowRightIcon,
-  HashtagIcon,
-  ListBulletIcon,
-  XMarkIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
+    ArrowLeftStartOnRectangleIcon,
+    ArrowRightIcon,
+    CheckCircleIcon,
+    ExclamationTriangleIcon,
+    HashtagIcon,
+    ListBulletIcon,
+    XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { Player } from "../interfaces/interfaces.ts";
+import {Player} from "../interfaces/interfaces.ts";
 import Leaderboard from "../components/Leaderboard.tsx";
-import { AnimatePresence } from "framer-motion";
+import {AnimatePresence} from "framer-motion";
 import ExitDialog from "../components/ExitDialog.tsx";
-import {
-  createInitialArrangement,
-  selectNextSitovers,
-} from "../utils/sitoverUtils.ts";
+import {createInitialArrangement, selectNextSitovers,} from "../utils/sitoverUtils.ts";
 import MatchCard from "../components/MatchCard.tsx";
 
 export const TournamentScreen = () => {
@@ -78,7 +75,7 @@ export const TournamentScreen = () => {
       setPlayerScores(orderedPlayers);
       localStorage.setItem("tournamentStarted", "true");
     }
-  }, []);
+  }, [playerScores]);
 
   const sitovers = useMemo(() => {
     const numSitouts = playerScores.length % 4;
@@ -183,9 +180,8 @@ export const TournamentScreen = () => {
         const p3 = playingNextRound[i + 2];
 
         if (partnerMap.get(p1.id) === p3.id) {
-          const p4 = playingNextRound[i + 3];
-          playingNextRound[i + 2] = p4;
-          playingNextRound[i + 3] = p3;
+            playingNextRound[i + 2] = playingNextRound[i + 3];
+            playingNextRound[i + 3] = p3;
         }
       }
     }
@@ -464,7 +460,7 @@ export const TournamentScreen = () => {
 
                       const courtNameBase =
                           matches.length < 9
-                              ? currentCourts.filter((court: any) => court !== "Bane 1")[
+                              ? currentCourts.filter((court) => court !== "Bane 1")[
                               index % (currentCourts.length - 1)
                                   ]
                               : currentCourts[index % currentCourts.length];

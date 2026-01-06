@@ -1,8 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Player } from "../interfaces/interfaces.ts";
-//import gif from "../assets/fire.gif";
-import christmasGif from "../assets/christmasgif2.gif";
+import gif from "../assets/fire.gif";
 
 interface MatchCardProps {
   match: Player[];
@@ -48,15 +47,14 @@ const MatchCard: React.FC<MatchCardProps> = ({
       exit="exit"
       transition={transitionSettings}
       className={`relative h-20 grid grid-cols-3 rounded-lg bg-gradient-to-t 
-      from-white via-red-300 to-red-600
+      from-orange-500 via-yellow-300 to-sky-300
       ${isSpecialLayout ? "col-span-3 text-xl py-2 px-2" : "py-4 pr-0.5"}`}
       style={
         isHighScore
           ? {
-              backgroundImage: `url(${christmasGif})`,
-              backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-              backgroundPosition: "50% 35%",
+                backgroundImage: `url(${gif})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
             }
           : {}
       }
